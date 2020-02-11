@@ -24,6 +24,7 @@
 </script>
 
 <script>
+    var puntos = []
     function init() {
         // Get canvas object from the DOM
         var canvas = document.getElementById("myCanvas");
@@ -34,15 +35,15 @@
             console.log("Failed to get the rendering context for WebGL");
             return;
         }
-        
-        // Register event handler
-        canvas.onmousedown = function(ev) {
-        click(ev, gl, canvas);
-        };
 
         // Clear canvas
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
         gl.clear(gl.COLOR_BUFFER_BIT);
+
+        // Register event handler
+        canvas.onmousedown = function(ev) {
+        click(ev, gl, canvas);
+        };
 
         // Init shaders
         var vs = document.getElementById('shaderVs').innerHTML;
@@ -53,21 +54,33 @@
             console.log('Failed to intialize shaders.');
             return;
         }
+      }
 
+    function click(ev, gl, canvas) {
+        // Coordinates of canvas origin
+        var rect = ev.target.getBoundingClientRect();
+        // relative x coordinate of click in canvas
+        var clickX = ev.clientX - rect.left;
+        // relative y coordinate of click in canvas
+        var clickY = ev.clientY - rect.top;
+        // WebGL coordinates (3D)
+        var halfCanvasWidth = canvas.width / 2;
+        var halfCanvasHeight = canvas.height / 2;
+        var x = (clickX - halfCanvasWidth) / halfCanvasWidth;
+        var y = (halfCanvasHeight - clickY) / halfCanvasHeight;
+        var xyz = [x, y, 0];
+        puntos.push(xyz)
 
-		var a_Position = gl.getAttribLocation(gl.program, "a_Position");
+        gl.clear(gl.COLOR_BUFFER_BIT);
 
-		// 1. Array values
-		var verticesArray = [0.0, 0.0, 0.0];
-		gl.vertexAttrib3fv(a_Position, verticesArray);
-
-		// 2. Single values
-		//gl.vertexAttrib3f(a_Position, 0.5, 0.5, 0);
-
-		// Draw
-		gl.drawArrays(gl.POINTS, 0, 1);
-
+        var a_Position = gl.getAttribLocation(gl.program, "a_Position");
+        for(var i = 0; i < puntos.length; i++){
+          console.log(puntos[i]);
+      		gl.vertexAttrib3fv(a_Position, puntos[i]);
+          gl.drawArrays(gl.POINTS, 0, 1)
+        }
     }
+
 
 
     function initShaders(gl, vs_source, fs_source) {
@@ -103,20 +116,7 @@
         }
         return shader;
     }
-    function click(ev, gl, canvas) {
-        // Coordinates of canvas origin
-        var rect = ev.target.getBoundingClientRect();
-        // relative x coordinate of click in canvas
-        var clickX = ev.clientX - rect.left;
-        // relative y coordinate of click in canvas
-        var clickY = ev.clientY - rect.top;
-        // WebGL coordinates (3D)
-        var halfCanvasWidth = canvas.width / 2;
-        var halfCanvasHeight = canvas.height / 2;
-        var x = (clickX - halfCanvasWidth) / halfCanvasWidth;
-        var y = (halfCanvasHeight - clickY) / halfCanvasHeight;
-        var xyz = [x, y, 0];
-    }
+
 
 </script>
 
