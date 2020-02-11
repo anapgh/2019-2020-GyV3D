@@ -11,9 +11,10 @@
 
 <script id="shaderVs" type="x-shader/x-vertex">
 	attribute vec4 a_Position;
+  attribute float a_PointSize;
     void main() {
         gl_Position = a_Position;
-        gl_PointSize = 10.0;
+        gl_PointSize = a_PointSize;
     }
 </script>
 
@@ -69,19 +70,32 @@
         var x = (clickX - halfCanvasWidth) / halfCanvasWidth;
         var y = (halfCanvasHeight - clickY) / halfCanvasHeight;
         var xyz = [x, y, 0];
+        //Push sirve para ejecutar el metodo del array
         puntos.push(xyz)
-
+        //Volvemos a pintar el canvas, ya que al poner los puntos nos lo quita
         gl.clear(gl.COLOR_BUFFER_BIT);
-
+        //Cogemos con la funcion get atribute, las coordenadas del click
         var a_Position = gl.getAttribLocation(gl.program, "a_Position");
+        var a_PointSize = gl.getAttribLocation(gl.program, "a_PointSize");
+        //Hacemos un bucle for para recorrer el array que guarda las coordenadas
+        //de cada click, es decir su longitud 'length'
         for(var i = 0; i < puntos.length; i++){
+          //Comparamos las coordenadas para el tamaño
+          if ((x >= 0.7) || (y >= 0.7)){
+              size = 20.0;
+          }else{
+              size = 10.0;
+          }
           console.log(puntos[i]);
       		gl.vertexAttrib3fv(a_Position, puntos[i]);
+          gl.vertexAttrib1f(a_PointSize, size);
           gl.drawArrays(gl.POINTS, 0, 1)
         }
+
+        //var a_PointSize = gl.getAttribLocation(gl.program, "a_PointSize");
+        //a_PointSize = 10.0
+
     }
-
-
 
     function initShaders(gl, vs_source, fs_source) {
         // Compile shaders
