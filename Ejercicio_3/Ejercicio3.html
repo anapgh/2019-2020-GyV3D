@@ -19,13 +19,17 @@
 </script>
 
 <script id="shaderFs" type="x-shader/x-fragment">
+  precision mediump float;
+  uniform vec4 FragColor;
     void main() {
-        gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+        gl_FragColor = FragColor;
     }
 </script>
 
 <script>
     var puntos = []
+    var a_size = []
+    var a_color = []
     function init() {
         // Get canvas object from the DOM
         var canvas = document.getElementById("myCanvas");
@@ -71,30 +75,57 @@
         var y = (halfCanvasHeight - clickY) / halfCanvasHeight;
         var xyz = [x, y, 0];
         //Push sirve para ejecutar el metodo del array
-        puntos.push(xyz)
+        puntos.push(xyz);
         //Volvemos a pintar el canvas, ya que al poner los puntos nos lo quita
         gl.clear(gl.COLOR_BUFFER_BIT);
         //Cogemos con la funcion get atribute, las coordenadas del click
         var a_Position = gl.getAttribLocation(gl.program, "a_Position");
+        if(a_Position < 0){
+          console.log('Failed to get the storage location of gl_Position');
+          return -1;
+        }
+        //Cogemos con la funcion get atribute, el tamaño del click
         var a_PointSize = gl.getAttribLocation(gl.program, "a_PointSize");
+
+          //Cogemos con la funcion get atribute, el color del click
+        var FragColor = gl.getUniformLocation(gl.program, "FragColor");
+        if (FragColor < 0){
+          console.log('Failed to get the storage location of FragColor');
+          return -1;
+        }
+        //Creamos los colores que quiero
+        var white = [0.0, 0.0, 0.0, 0.0];
+        var red = [1.0, 0.0, 0.0, 1.0];
+        var green = [0.0, 1.0, 0.0, 1.0];
+        var blue = [0.0, 0.0, 1.0, 1.0];
+        var pink = [1.0, 0.0, 0.5, 1.0]
+        //Comparamos las coordenadas para el tamaño y colors
+        if (((x >= 0.7) || (y >= 0.7)) || ((x <= -0.7) || (y <= -0.7))){
+            a_size.push(20.0);
+            a_color.push(white)
+        }else {
+            a_size.push(10.0);
+            if ((x > 0) && (y > 0)){
+              a_color.push(red);
+            }else if ((x > 0) && (y < 0)) {
+              a_color.push(green);
+            }else if ((x < 0) && (y > 0)) {
+              a_color.push(pink);
+            }else{
+              a_color.push(blue);
+            }
+        }
+
+
         //Hacemos un bucle for para recorrer el array que guarda las coordenadas
         //de cada click, es decir su longitud 'length'
         for(var i = 0; i < puntos.length; i++){
-          //Comparamos las coordenadas para el tamaño
-          if ((x >= 0.7) || (y >= 0.7)){
-              size = 20.0;
-          }else{
-              size = 10.0;
-          }
           console.log(puntos[i]);
       		gl.vertexAttrib3fv(a_Position, puntos[i]);
-          gl.vertexAttrib1f(a_PointSize, size);
+          gl.vertexAttrib1f(a_PointSize, a_size[i]);
+          gl.uniform4fv(FragColor, a_color[i])
           gl.drawArrays(gl.POINTS, 0, 1)
         }
-
-        //var a_PointSize = gl.getAttribLocation(gl.program, "a_PointSize");
-        //a_PointSize = 10.0
-
     }
 
     function initShaders(gl, vs_source, fs_source) {
