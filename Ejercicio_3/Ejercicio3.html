@@ -87,7 +87,7 @@
         //Cogemos con la funcion get atribute, el tamaño del click
         var a_PointSize = gl.getAttribLocation(gl.program, "a_PointSize");
 
-          //Cogemos con la funcion get atribute, el color del click
+        //Cogemos con la funcion get atribute, el color del click
         var FragColor = gl.getUniformLocation(gl.program, "FragColor");
         if (FragColor < 0){
           console.log('Failed to get the storage location of FragColor');
@@ -115,7 +115,6 @@
               a_color.push(blue);
             }
         }
-
 
         //Hacemos un bucle for para recorrer el array que guarda las coordenadas
         //de cada click, es decir su longitud 'length'
@@ -161,7 +160,6 @@
         }
         return shader;
     }
-
 
 </script>
 
