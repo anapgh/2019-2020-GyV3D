@@ -31,7 +31,7 @@
 
 <script>
     var gl;
-    var count = 0.0;
+    var rotation = 0.0;
     var scale = 1.0;
     var x = 0.0;
     var y = 0.0;
@@ -90,10 +90,10 @@
             scale -= step;
             break;
           case 36: // Home
-            count -= step;
+            rotation -= step;
             break
           case 35: // End
-            count += step;
+            rotation += step;
             break;
 
         } // Draw
@@ -184,7 +184,7 @@
 
         var translated = mat4.fromTranslation(mat4.create(), [x, y, 0.0]);
         var scaled = mat4.fromScaling(mat4.create(), [scale, scale, 0.0]);
-        var rotated = mat4.fromXRotation(mat4.create(), count);
+        var rotated = mat4.fromZRotation(mat4.create(), rotation);
         var matrix = mat4.multiply(mat4.create(), translated, scaled);
         var matrix_total = mat4.multiply(mat4.create(), matrix, rotated);
 
