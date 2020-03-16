@@ -41,6 +41,8 @@
     <script>
         var gl;
         var count = 0.0;
+        var rotation = 0.0;
+        var z = -3;
 
         function init() {
             // Obtengo el objeto 'canvas' del DOM
@@ -72,6 +74,11 @@
 
             // Inicializo texturas y dibujo la escena
             initTexturesAndDraw(gl);
+
+            // Event listener for mouse wheel
+            document.addEventListener('wheel', function (event) {
+              z = event.wheelDelta > 0 ? z + 1 : z - 1;
+            });
         }
 
         function initVertexShader(gl) {
@@ -147,15 +154,17 @@
         }
 
         function initProjection(gl, canvas) {
+            // Centrar canvas
+            var ratio = canvas.width / canvas.height;
             // Write u_pMatrix
             var pMatrixUniform = gl.getUniformLocation(gl.program, "u_pMatrix");
-            var ratio = canvas.width / canvas.height;
             var pMatrix = mat4.perspective(mat4.create(), 150, ratio, 0.1, 100);
             gl.uniformMatrix4fv(pMatrixUniform, false, pMatrix);
 
             // Write u_vMatrix
             var vMatrixUniform = gl.getUniformLocation(gl.program, "u_vMatrix");
-            var vMatrix = mat4.lookAt(mat4.create(), [0, 0, -3], [0, 0, 0], [0, 1, 0]);
+            // Aqui nos va a decir donde mira la cámara, es la posición de la cámara
+            var vMatrix = mat4.lookAt(mat4.create(), [0, 0, z], [0, 0, 0], [0, 1, 0]);
             gl.uniformMatrix4fv(vMatrixUniform, false, vMatrix);
         }
 
@@ -239,6 +248,8 @@
 
 <body onload="init()">
     <canvas id="myCanvas" width="640" height="480"></canvas>
+    <br>
+     Step: <input type="text" value="0.01" id="step">
 </body>
 
 </html>
