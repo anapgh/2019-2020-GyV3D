@@ -1,0 +1,225 @@
+<!DOCTYPE>
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset="utf-8">
+    <title>Pintar hexágono</title>
+  </head>
+
+  <body onload="init()">
+    <canvas id="myCanvas" width="640" height="480"></canvas>
+    <br>
+    <!---Introducir el valor del step(paso) por pantalla.--->
+    Step: <input type="text" id="step" value="0.01">
+  </body>
+
+  <!--Libreria de JavaScript que nos permite utilizar glMatrix--->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.8.1/gl-matrix-min.js"></script>
+
+  <!--Scripts de los shaders--->
+  <script id="shaderVs" type="x-shader/x-vertex">
+    attribute vec4 a_Position;
+    attribute vec4 a_Color;
+    varying highp vec4 v_Color;
+    uniform mat4 u_Matrix;
+    void main(){
+      gl_Position = u_Matrix * a_Position;
+      v_Color = a_Color;
+    }
+  </script>
+
+  <script id="shaderFs" type="x-shader/x-fragment">
+    varying highp vec4 v_Color;
+    void main(){
+      gl_FragColor = v_Color;
+    }
+  </script>
+
+  <!--------------------------------------------------------------------------->
+                          <!---Script Principal--->
+  <!--------------------------------------------------------------------------->
+  <script>
+    var gl;
+    var n;
+
+    function init(){
+      var canvas = document.getElementById("myCanvas");// Obtenemos el canvas que hemos creado.
+      gl = canvas.getContext("webgl"); // Creamos el contexto 3D
+      if (!gl) {
+          console.log("Failed to get the rendering context for WebGL");
+          return;
+      }
+      // Leemos los shaders
+      var vs = document.getElementById('shaderVs').innerHTML;
+      var fs = document.getElementById('shaderFs').innerHTML;
+      if (!initShaders(gl, vs, fs)){
+        console.log('Failed to intialize shaders.');
+        return;
+      }
+      // Escribimos la posicion de los verticen en el vertexShader
+      n = initVertexBuffers(gl);
+      if (n < 0) {
+        console.log('Failed to set the positions of the vertices.');
+        return;
+      }
+
+      gl.clearColor(0.0, 0.0, 0.0, 1.0); // Asignamos el color.
+      drawTransformations(); // Lo pintamos.
+    }
+
+    // Inicializamos los shaders
+    function initShaders(gl, vs_source, fs_source){
+      // Compilamos los shaders
+      var vertexShader = makeShader(gl, vs_source, gl.VERTEX_SHADER);
+      var fragmentShader = makeShader(gl, fs_source, gl.FRAGMENT_SHADER);
+      // Creamos el programa.
+      var glProgram = gl.createProgram(); // Objeto contenedor del programa.
+      // Añadimos los dos shaders al programa
+      gl.attachShader(glProgram, vertexShader);
+      gl.attachShader(glProgram, fragmentShader);
+      // Los linkamos al programa.
+      gl.linkProgram(glProgram);
+      if(!gl.getProgramParameter(glProgram, gl.LINK_STATUS)){
+        alert("Unable to initialize the shader program.");
+        return false;
+      }
+      // Indicamos a JavaScript que utilice el programa.
+      gl.useProgram(glProgram);
+      gl.program = glProgram;
+
+      return true; // Indica que la inicialización de los shaders ha tenido éxito.
+    }
+
+    // Creamos la funcion makeShader
+    function makeShader(gl, src, type){
+      var shader = gl.createShader(type); // Crea el shader del tipo (vertex/fragment)
+      gl.shaderSource(shader, src); // Linka el shader que hemos creado a la variable JS que contiene la función
+      gl.compileShader(shader); // Compila el shader creado y linkado.
+      if(!gl.getShaderParameter(shader, gl.COMPILE_STATUS)){
+        alert("Error compiling shader: " + gl.getShaderInfoLog(shader));
+        return;
+      }
+      return shader;
+    }
+
+    // Inicializamos los Buffers.
+    function initVertexBuffers(gl){
+      // Vertices.
+      var dim = 3;
+      var vertices = new Float32Array([
+        0.0, 0.0, 0.0, // Vertice 0 (centro del hexagono)
+        0.5, 0.0, 0.0, // Vertice 1
+        0.25, 0.5, 0.0, // vertice 2
+        -0.25, 0.5, 0.0, // vertice 3
+        -0.5, 0.0, 0.0, // vertice 4
+        -0.25, -0.5, 0.0, // vertice 5
+        0.25, -0.5, 0.0 // vertice 6
+      ]);
+
+      // Creamos el buffer.
+      var vertexBuffer = gl.createBuffer();
+      if(!vertexBuffer){
+        console.log('Failed to create the buffer object');
+        return -1;
+      }
+      // Conectamos los buffers a los shaders
+      gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+      // Se pregunta a WebGL dónde están los datos.(Están en el codigo JS del vertex shader).
+      var a_Position = gl.getAttribLocation(gl.program, 'a_Position');
+      if(a_Position<0) {
+        console.log('Failed to get the storage location of a_Position');
+        return-1;
+      }
+      gl.vertexAttribPointer(a_Position, dim, gl.FLOAT, false, 0, 0);
+      gl.enableVertexAttribArray(a_Position);
+
+      // colores.
+      var colors = new Float32Array([
+        1.0, 0.0, 0.0, // Indice 0
+        0.0, 1.0, 0.0, // Indice 1
+        0.0, 1.0, 0.0, // Indice 2
+        0.0, 1.0, 0.0, // Indice 3
+        0.0, 1.0, 0.0, // Indice 4
+        0.0, 1.0, 0.0, // Indice 5
+        0.0, 1.0, 0.0, // Indice 6
+      ]);
+
+      // Creamos los buffer para el color.
+      var trianglesColorBuffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, trianglesColorBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, colors, gl.STATIC_DRAW);
+      var a_Color = gl.getAttribLocation(gl.program, 'a_Color');
+      gl.vertexAttribPointer(a_Color, dim, gl.FLOAT, false, 0, 0);
+      gl.enableVertexAttribArray(a_Color);
+
+      // Creamos la matriz que relaciona los indices.
+      var indices = new Uint16Array([
+        0, 1, 2,
+        0, 2 ,3,
+        0, 3, 4,
+        0, 4, 5,
+        0, 5, 6,
+        0, 6, 1
+      ]);
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.createBuffer());
+      gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
+      // Se dibujan, para ello, en esta función se le indica qué variable tiene los vértices y
+     //  se devuelve el número de vértices a dibujar.
+     return indices.length;
+    }
+
+    var count = 0.0;
+    function drawTransformations(){
+      // Pintamos el canvas
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      var position = Math.abs(Math.sin(count));
+      // Triangulo 1
+      var translated = mat4.fromTranslation(mat4.create(), [position, position, 0.0]);
+      var uniformMatrix4fv = gl.getUniformLocation(gl.program, "u_Matrix");
+      gl.uniformMatrix4fv(uniformMatrix4fv, false, translated);
+      // Dibujamos el rectangulo con las transformaciones correspondientes.
+      gl.drawElements(gl.TRIANGLES, 3, gl.UNSIGNED_SHORT, 0*2);
+
+      // Triangulo 2
+      var translated = mat4.fromTranslation(mat4.create(), [0.0, position, 0.0]);
+      var uniformMatrix4fv = gl.getUniformLocation(gl.program, "u_Matrix");
+      gl.uniformMatrix4fv(uniformMatrix4fv, false, translated);
+      // Dibujamos el rectangulo con las transformaciones correspondientes.
+      gl.drawElements(gl.TRIANGLES, 3, gl.UNSIGNED_SHORT, 3*2);
+
+      // Triangulo 3
+      var translated = mat4.fromTranslation(mat4.create(), [-position, position, 0.0]);
+      var uniformMatrix4fv = gl.getUniformLocation(gl.program, "u_Matrix");
+      gl.uniformMatrix4fv(uniformMatrix4fv, false, translated);
+      // Dibujamos el rectangulo con las transformaciones correspondientes.
+      gl.drawElements(gl.TRIANGLES, 3, gl.UNSIGNED_SHORT, 6*2);
+
+      // Triangulo 4
+      var translated = mat4.fromTranslation(mat4.create(), [-position, -position, 0.0]);
+      var uniformMatrix4fv = gl.getUniformLocation(gl.program, "u_Matrix");
+      gl.uniformMatrix4fv(uniformMatrix4fv, false, translated);
+      // Dibujamos el rectangulo con las transformaciones correspondientes.
+      gl.drawElements(gl.TRIANGLES, 3, gl.UNSIGNED_SHORT, 9*2);
+
+      // Triangulo 5
+      var translated = mat4.fromTranslation(mat4.create(), [0.0, -position, 0.0]);
+      var uniformMatrix4fv = gl.getUniformLocation(gl.program, "u_Matrix");
+      gl.uniformMatrix4fv(uniformMatrix4fv, false, translated);
+      // Dibujamos el rectangulo con las transformaciones correspondientes.
+      gl.drawElements(gl.TRIANGLES, 3, gl.UNSIGNED_SHORT, 12*2);
+
+      // Triangulo 6
+      var translated = mat4.fromTranslation(mat4.create(), [position, -position, 0.0]);
+      var uniformMatrix4fv = gl.getUniformLocation(gl.program, "u_Matrix");
+      gl.uniformMatrix4fv(uniformMatrix4fv, false, translated);
+      // Dibujamos el rectangulo con las transformaciones correspondientes.
+      gl.drawElements(gl.TRIANGLES, 3, gl.UNSIGNED_SHORT, 15*2);
+
+      count += 0.01;
+      requestAnimationFrame(drawTransformations);
+    }
+  </script>
+
+</html>
