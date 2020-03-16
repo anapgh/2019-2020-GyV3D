@@ -25,13 +25,16 @@
     <script id="shaderFs" type="x-shader/x-fragment">
         precision highp float;
         precision mediump float;
-        uniform sampler2D u_Sampler;
+        uniform sampler2D u_Sampler0;
+        uniform sampler2D u_Sampler1;
         varying vec2 v_TexCoord;
 
         //La textura se configura desde JS (u_Sampler) y se procesa en el
         //fragmentShader usando las coordenadas calculadas por vertice (v_TexCoord)
         void main(void) {
-            gl_FragColor = texture2D(u_Sampler, v_TexCoord);
+            vec4 color0 = texture2D(u_Sampler0, v_TexCoord);
+            vec4 color1 = texture2D(u_Sampler1, v_TexCoord);
+            gl_FragColor = color0 * color1;
         }
     </script>
 
@@ -157,12 +160,17 @@
         }
 
         function initTexturesAndDraw(gl) {
-            var image = new Image();
-            image.src = 'arrow.jpg';
-            image.onload = function () {
-                loadTexture(gl, "u_Sampler", image, 0, true);
-                drawScene();
-            };
+            var image1 = new Image();
+            image1.src = 'arrow.jpg';
+            var image2 = new Image()
+            image2.src = 'circle.gif'
+            image1.onload = function () {
+              loadTexture(gl, "u_Sampler0", image1, 0, true);
+              image2.onload = function () {
+                loadTexture(gl, "u_Sampler1", image2, 1, true)
+                drawScene(gl);
+              }
+          };
         }
 
         function loadTexture(gl, samplerUniform, image, unitNumber, flip) {
