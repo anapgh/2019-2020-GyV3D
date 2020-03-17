@@ -40,13 +40,16 @@
 
     <script>
         var gl;
+        var canvas;
         var count = 0.0;
-        var rotation = 0.0;
+        var rotated_iz_de = 0.0;
+        var rotated_arr_ab = 0.0;
+        var y= 0.0;
         var z = -3;
 
         function init() {
             // Obtengo el objeto 'canvas' del DOM
-            var canvas = document.getElementById("myCanvas");
+            canvas = document.getElementById("myCanvas");
 
             // Inicializo el contexto para poder dibujar en el canvas
             gl = canvas.getContext("webgl");
@@ -75,40 +78,72 @@
             // Inicializo texturas y dibujo la escena
             initTexturesAndDraw(gl);
 
-            // Event listener for mouse wheel
-            document.addEventListener('wheel', function (event) {
-              z = event.wheelDelta > 0 ? z + 1 : z - 1;
-            });
+
+            document.onkeydown = function (ev) {
+            var step = new Number(document.getElementById("step").value);
+            switch (ev.keyCode) {
+              case 37: // Left
+                rotated_iz_de += step;
+                break;
+              case 39: // Right
+                rotated_iz_de -= step;
+                break;
+              case 38: // Up
+                rotated_arr_ab -= step;
+                break;
+              case 40: // Down
+                rotated_arr_ab += step;
+              case 33: // PageUp
+                y += step;
+                break;
+              case 34: // PageDown
+                y -= step;
+            }
+          }
+
+          // Event listener for mouse wheel
+          document.addEventListener('wheel', function (event) {
+            z = event.wheelDelta > 0 ? z + 1 : z - 1;
+          });
+
         }
+
+
 
         function initVertexShader(gl) {
             // Coordenadas de Vertices (x,y,z) y Texturas(s,t)
             var vertexesAndTextures = [
-                -0.5, -0.5, -0.5,     0.0, 0.0,
-                 0.5, -0.5, -0.5,     1.0, 0.0,
-                 0.5,  0.5, -0.5,     1.0, 1.0,
-                -0.5,  0.5, -0.5,     0.0, 1.0,
+                 //FRONT
+                -0.5, -0.5, -0.5,     0.0, 0.0, // Botton left
+                 0.5, -0.5, -0.5,     0.0, 1.0, // Botton right
+                 0.5,  0.5, -0.5,     1.0, 1.0, // Top right
+                -0.5,  0.5, -0.5,     1.0, 0.0, // Top left
 
-                -0.5, -0.5,  0.5,     0.0, 1.0,
-                 0.5, -0.5,  0.5,     0.0, 0.0,
-                 0.5,  0.5,  0.5,     1.0, 1.0,
+                //LEFT --
+                -0.5, -0.5,  0.5,     0.0, 0.0, // Botton left
+                 0.5, -0.5,  0.5,     1.0, 0.0, // Botton right
+                 0.5,  0.5,  0.5,     1.0, 1.0, // Top right
+                -0.5,  0.5,  0.5,     0.0, 1.0, // Top left
+
+                //RIGHT
+                -0.5, -0.5, -0.5,     0.0, 1.0,
+                -0.5,  0.5, -0.5,     0.0, 0.0,
                 -0.5,  0.5,  0.5,     1.0, 0.0,
+                -0.5, -0.5,  0.5,     1.0, 1.0,
 
-                -0.5, -0.5, -0.5,     0.0, 0.0,
-                -0.5,  0.5, -0.5,     0.0, 1.0,
-                -0.5,  0.5,  0.5,     1.0, 1.0,
-                -0.5, -0.5,  0.5,     1.0, 0.0,
-
+                //TOP
                  0.5, -0.5, -0.5,     0.0, 1.0,
                  0.5,  0.5, -0.5,     0.0, 0.0,
                  0.5,  0.5,  0.5,     1.0, 1.0,
                  0.5, -0.5,  0.5,     1.0, 0.0,
 
+                 //BOTTON
                 -0.5, -0.5, -0.5,     0.0, 0.0,
                 -0.5, -0.5,  0.5,     0.0, 1.0,
                  0.5, -0.5,  0.5,     1.0, 1.0,
                  0.5, -0.5, -0.5,     1.0, 0.0,
 
+                 //BACK
                 -0.5,  0.5, -0.5,     0.0, 1.0,
                 -0.5,  0.5,  0.5,     0.0, 0.0,
                  0.5,  0.5,  0.5,     1.0, 1.0,
@@ -164,7 +199,7 @@
             // Write u_vMatrix
             var vMatrixUniform = gl.getUniformLocation(gl.program, "u_vMatrix");
             // Aqui nos va a decir donde mira la cámara, es la posición de la cámara
-            var vMatrix = mat4.lookAt(mat4.create(), [0, 0, z], [0, 0, 0], [0, 1, 0]);
+            var vMatrix = mat4.lookAt(mat4.create(), [0, y, z], [0, 0, 0], [0, 1, 0]);
             gl.uniformMatrix4fv(vMatrixUniform, false, vMatrix);
         }
 
@@ -200,9 +235,10 @@
         function drawScene() {
             // Clear
             gl.clear(gl.COLOR_BUFFER_BIT);
-
             // Rotate
-            var mvMatrix = mat4.fromRotation(mat4.create(), count, [0.5, 0.5, 0.5]);
+            var rotatedX = mat4.fromXRotation(mat4.create(), rotated_arr_ab);
+            var rotatedY = mat4.fromYRotation(mat4.create(), rotated_iz_de);
+            var mvMatrix = mat4.multiply(mat4.create(), rotatedX, rotatedY);
             var uMvMatrix = gl.getUniformLocation(gl.program, "u_mvMatrix");
             gl.uniformMatrix4fv(uMvMatrix, false, mvMatrix);
 
@@ -210,7 +246,7 @@
             gl.drawElements(gl.TRIANGLES, 6 * 2 * 3, gl.UNSIGNED_SHORT, 0);
 
             // Call drawScene again in the next browser repaint
-            count += 0.01;
+            initProjection(gl,canvas);
             requestAnimationFrame(drawScene);
         }
 
