@@ -46,6 +46,27 @@
         var rotated_arr_ab = 0.0;
         var y= 0.0;
         var z = -3;
+        var tex_left = [1.0, 0.0,
+                        1.0, 1.0,
+                        0.0, 1.0,
+                        0.0, 0.0];
+
+        var tex_right = [1.0, 1.0,
+                         1.0, 0.0,
+                         0.0, 0.0,
+                         0.0, 1.0];
+
+        var tex_up = [0.0, 0.0,
+                      1.0, 0.0,
+                      1.0, 1.0,
+                      0.0, 1.0];
+
+        var tex_down = [1.0, 1.0,
+                        0.0, 1.0,
+                        0.0, 0.0,
+                        1.0, 0.0];
+
+        var text = tex_left;
 
         function init() {
             // Obtengo el objeto 'canvas' del DOM
@@ -84,21 +105,27 @@
             switch (ev.keyCode) {
               case 37: // Left
                 rotated_iz_de += step;
+                text = tex_left;
                 break;
               case 39: // Right
                 rotated_iz_de -= step;
+                text = tex_right;
                 break;
               case 38: // Up
                 rotated_arr_ab -= step;
+                text = tex_up;
                 break;
               case 40: // Down
                 rotated_arr_ab += step;
+                text = tex_down;
               case 33: // PageUp
                 y += step;
                 break;
               case 34: // PageDown
                 y -= step;
+                break;
             }
+              initVertexShader(gl);
           }
 
           // Event listener for mouse wheel
@@ -108,46 +135,45 @@
 
         }
 
-
-
         function initVertexShader(gl) {
             // Coordenadas de Vertices (x,y,z) y Texturas(s,t)
             var vertexesAndTextures = [
                  //FRONT
-                -0.5, -0.5, -0.5,     0.0, 0.0, // Botton left
-                 0.5, -0.5, -0.5,     0.0, 1.0, // Botton right
-                 0.5,  0.5, -0.5,     1.0, 1.0, // Top right
-                -0.5,  0.5, -0.5,     1.0, 0.0, // Top left
+                -0.5, -0.5, -0.5,     text[0], text[1], // Botton left
+                 0.5, -0.5, -0.5,     text[2], text[3], // Botton right
+                 0.5,  0.5, -0.5,     text[4], text[5], // Top right
+                -0.5,  0.5, -0.5,     text[6], text[7], // Top left
 
                 //BACK
-                -0.5, -0.5,  0.5,     0.0, 1.0, // Botton left
-                 0.5, -0.5,  0.5,     0.0, 0.0, // Botton right
-                 0.5,  0.5,  0.5,     1.0, 0.0, // Top right
-                -0.5,  0.5,  0.5,     1.0, 1.0, // Top left
+                 0.5, -0.5,  0.5,     text[0], text[1],
+                -0.5, -0.5,  0.5,     text[2], text[3],
+                -0.5,  0.5,  0.5,     text[4], text[5],
+                 0.5,  0.5,  0.5,     text[6], text[7],
 
                 // LEFT
-                -0.5, -0.5, -0.5,     1.0, 1.0, // Botton left
-                -0.5,  0.5, -0.5,     0.0, 1.0, // Botton right
-                -0.5,  0.5,  0.5,     0.0, 0.0, // Top right
-                -0.5, -0.5,  0.5,     1.0, 0.0, // Top left
+                -0.5,  0.5,  0.5,     text[0], text[1],
+                -0.5,  0.5, -0.5,     text[2], text[3],
+                -0.5, -0.5, -0.5,     text[4], text[5],
+                -0.5, -0.5,  0.5,     text[6], text[7],
 
                 // RIGHT
-                 0.5, -0.5, -0.5,     0.0, 0.0, // Botton left
-                 0.5,  0.5, -0.5,     1.0, 0.0, // Botton right
-                 0.5,  0.5,  0.5,     1.0, 1.0, // Top right
-                 0.5, -0.5,  0.5,     0.0, 1.0, // Top left
+                 0.5, -0.5, -0.5,     text[0], text[1],
+                 0.5, -0.5,  0.5,     text[2], text[3],
+                 0.5,  0.5,  0.5,     text[4], text[5],
+                 0.5,  0.5, -0.5,     text[6], text[7],
 
                  // TOP
-                -0.5, -0.5, -0.5,     0.0, 0.0, // Botton left
-                -0.5, -0.5,  0.5,     1.0, 0.0, // Botton right
-                 0.5, -0.5,  0.5,     1.0, 1.0, // Top right
-                 0.5, -0.5, -0.5,     0.0, 1.0, // Top left
+                -0.5, -0.5, -0.5,     text[0], text[1],
+                 0.5, -0.5, -0.5,     text[2], text[3],
+                 0.5, -0.5,  0.5,     text[4], text[5],
+                -0.5, -0.5,  0.5,     text[6], text[7],
 
                  // BOTTON
-                -0.5,  0.5, -0.5,     0.0, 0.0, // Botton left
-                -0.5,  0.5,  0.5,     1.0, 0.0, // Botton right
-                 0.5,  0.5,  0.5,     1.0, 1.0, // Top right
-                 0.5,  0.5, -0.5,     0.0, 1.0, // Top left
+                -0.5,  0.5, -0.5,     text[0], text[1],
+                 0.5,  0.5, -0.5,     text[2], text[3],
+                 0.5,  0.5,  0.5,     text[4], text[5],
+                -0.5,  0.5,  0.5,     text[6], text[7],
+
             ];
 
             // Indexes
