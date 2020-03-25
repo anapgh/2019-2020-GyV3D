@@ -8,17 +8,20 @@
 
     <script id="shaderVs" type="x-shader/x-vertex">
         attribute vec4 a_Position;
-        attribute vec2 a_TexCoord;
+        attribute vec2 a_TexCoord; // Luz direccional
+        attribute vec3 a_Normal;
 
         uniform mat4 u_pMatrix;
         uniform mat4 u_vMatrix;
         uniform mat4 u_mvMatrix;
 
         varying vec2 v_TexCoord;
+        varying highp vec3 v_Normal; // Luz direccional
 
         void main() {
             gl_Position = u_pMatrix * u_vMatrix * u_mvMatrix * a_Position;
             v_TexCoord = a_TexCoord;
+            v_Normal = normalize(a_Normal); // Normalizo
         }
     </script>
 
@@ -28,13 +31,23 @@
         uniform sampler2D u_Sampler;
 
         varying vec2 v_TexCoord;
+        varying highp vec3 v_Normal; // Luz direccional
 
-        uniform vec3 u_AmbientLight;
+        uniform vec3 u_LightDirection; // Luz direccional
+        uniform vec3 u_LightColor;// Luz direccional
+        uniform vec3 u_AmbientLight; // Luz ambiental
+
 
         void main(void) {
+            //--Textura
             vec4 text = texture2D(u_Sampler, v_TexCoord);
+            //--Reflexion Luz ambiental
             vec3 ambient = u_AmbientLight * text.rgb;
-            gl_FragColor = vec4(ambient, 1.0);
+            //--Reflexion Luz direccional
+            float nDotL = max(dot(u_LightDirection, v_Normal),0.0); // Producto escalar
+            vec3 diffuse = u_LightColor * text.rgb * nDotL;
+            //--Reflexion total
+            gl_FragColor = vec4(diffuse + ambient, 1.0);
         }
 
     </script>
@@ -83,6 +96,7 @@
         function initVertexShader(gl) {
             // Vertexes and textures coordinates
             var vertexesAndTextures = [];
+            var normals = [];
             for (var i = 0; i <= LATITUDE_BANDS; i++) {
                 var theta = i * Math.PI / LATITUDE_BANDS;
                 var sinTheta = Math.sin(theta);
@@ -103,6 +117,10 @@
 
                     var u = 1 - (j / LONGITUDE_BANDS);
                     var v = 1 - (i / LATITUDE_BANDS);
+
+                    normals.push(x);
+                    normals.push(y);
+                    normals.push(z);
 
                     vertexesAndTextures.push(u);
                     vertexesAndTextures.push(v);
@@ -141,6 +159,13 @@
             // Write indexes in gl.ELEMENT_ARRAY_BUFFER
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.createBuffer());
             gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indexes), gl.STATIC_DRAW);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(normals), gl.STATIC_DRAW);
+
+            var vertexNormalAttribute = gl.getAttribLocation(gl.program, "a_Normal");
+            gl.enableVertexAttribArray(vertexNormalAttribute);
+            gl.vertexAttribPointer(vertexNormalAttribute, 3, gl.FLOAT, false, 0, 0);
         }
 
         function initProjection(gl, canvas) {
@@ -159,6 +184,20 @@
             var ambientLight = [0.1, 0.1, 0.1];
             var ambientLightUniform = gl.getUniformLocation(gl.program, "u_AmbientLight");
             gl.uniform3fv(ambientLightUniform, ambientLight);
+
+            // Write u_LightColor
+            var lightColor = [ 1.0, 1.0, 1.0 ]; // white
+            var lightColorUniform = gl.getUniformLocation(gl.program, "u_LightColor");
+            gl.uniform3fv(lightColorUniform, lightColor);
+
+            // Write u_LightDirection
+            var x = document.getElementById("x").value;
+            var y = document.getElementById("y").value;
+            var z = document.getElementById("z").value;
+            var lightDirection = [ x, y, z ];
+            vec3.normalize(lightDirection, lightDirection);
+            var lightDirectionUniform = gl.getUniformLocation(gl.program, "u_LightDirection");
+            gl.uniform3fv(lightDirectionUniform, lightDirection);
         }
 
         function initTexturesAndDraw(gl) {
@@ -237,7 +276,11 @@
 
 <body onload="init()">
     <canvas id="myCanvas" width="640" height="480"></canvas>
-
+    <br>
+    <b>Light direction</b><br>
+    <input type="range" id="x" min="-20" max="20" value="2" step="1">X<br>
+    <input type="range" id="y" min="-20" max="20" value="8" step="1">Y<br>
+    <input type="range" id="z" min="-20" max="20" value="8" step="1">Z<br>
 </body>
 
 </html>
