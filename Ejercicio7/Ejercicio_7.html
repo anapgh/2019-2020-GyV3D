@@ -81,6 +81,7 @@
         function initVertexShader(gl) {
             // Vertexes and textures coordinates
             var vertexesAndTextures = [];
+            var normals = [];
             for (var i = 0; i <= LATITUDE_BANDS; i++) {
                 var theta = i * Math.PI / LATITUDE_BANDS;
                 var sinTheta = Math.sin(theta);
@@ -101,6 +102,10 @@
 
                     var u = 1 - (j / LONGITUDE_BANDS);
                     var v = 1 - (i / LATITUDE_BANDS);
+
+                    normals.push(x);
+                    normals.push(y);
+                    normals.push(z);
 
                     vertexesAndTextures.push(u);
                     vertexesAndTextures.push(v);
