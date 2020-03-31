@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>Esfera mundo</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/103/three.min.js"></script>
+
+<script>
+   function init() {
+      var scene = new THREE.Scene();
+      var sceneWidth = window.innerWidth;
+      var sceneHeight = window.innerHeight;
+
+      var camera = new THREE.PerspectiveCamera(90, sceneWidth / sceneHeight, 0.01, 100);
+      camera.position.z = 5; // Como de cerca esta la camara
+      
+
+      var geometry = new THREE.SphereGeometry(2, 20, 20);
+      var texture = new THREE.TextureLoader().load("earth.png")
+      var material = new THREE.MeshBasicMaterial({
+        map : texture
+      });
+      var sphere = new THREE.Mesh(geometry, material);
+      scene.add(sphere);
+
+      var renderer = new THREE.WebGLRenderer({
+         antialias : true
+      });
+
+      renderer.setSize(sceneWidth, sceneHeight);
+      document.body.appendChild(renderer.domElement);
+
+      animate(sphere, renderer, scene, camera);
+   }
+
+   function animate(sphere, renderer, scene, camera) {
+      sphere.rotation.y += 0.01;
+
+      renderer.render(scene, camera);
+
+      requestAnimationFrame(function() {
+         animate(sphere, renderer, scene, camera);
+      });
+   }
+</script>
+</head>
+
+<body onload="init()">
+</body>
+
+</html>
