@@ -62,6 +62,9 @@
       ball.position.x += stepX;
       ball.position.y += stepY;
 
+      // Actualizo posicion de la raqueta cpu
+      moveCpu(cpu, ball);
+
       // Actualizo posicion de la raqueta user
       moveUser(user);
 
@@ -138,6 +141,15 @@
      mesh.name = "cpu";
 
      return mesh;
+   }
+
+   function moveCpu(cpu, ball){
+     cpu.position.x = ball.position.x * 0.6;
+     if (cpu.position.x > 3){
+       cpu.position.x = 3;
+     }if (cpu.position.x < -3){
+        cpu.position.x = -3;
+     }
    }
 
    // USER
