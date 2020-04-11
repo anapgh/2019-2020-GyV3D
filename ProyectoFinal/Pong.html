@@ -137,7 +137,7 @@
      var material = new THREE.MeshNormalMaterial();
      var mesh= new THREE.Mesh(geometry, material);
      mesh.receiveShadow = true;
-     mesh.position.set(-3, 8.5, 0);
+     mesh.position.set(-4, 8.5, 0);
      mesh.name = "cpu";
 
      return mesh;
@@ -145,9 +145,9 @@
 
    function moveCpu(cpu, ball){
      cpu.position.x = ball.position.x * 0.6;
-     if (cpu.position.x > 3){
+     if (cpu.position.x >= 3){
        cpu.position.x = 3;
-     }if (cpu.position.x < -3){
+     }if (cpu.position.x <= -3){
         cpu.position.x = -3;
      }
    }
