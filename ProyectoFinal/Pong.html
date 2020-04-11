@@ -2,13 +2,18 @@
 <html>
 
 <head>
-<title>Three.js: Collision detection</title>
+<title>Three.js: PROYECTO FINAL: PONG</title>S
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/103/three.min.js"></script>
 
 <script>
    var stepX = 0.15;
    var stepY = 0.25;
+   //-- Variables para la raqueta del user
+   var user_x = -3; // coordenada x
+   var user_y = -8.5; // coordenada y
+   var user_z = 0; // coordenada z
+   var user_v = 0; // Velocidad
 
    function init() {
       var scene = new THREE.Scene();
@@ -31,9 +36,9 @@
       var rightBorder = getBorder("right", 1, 20, 2, 5, 0, 0);
       var topBorder = getBorder("top", 11, 1, 2, 0, 10, 0);
       var downBorder = getBorder("down", 9, 1, 2, 0, -9.5, 0);
-      var sphere = getSphere();
-      var cpu = getcpu();
-      var user = getuser();
+      var ball = getBall();
+      var cpu = getCpu();
+      var user = getUser();
       var floor = getFloor();
 
       scene.add(light);
@@ -41,26 +46,29 @@
       scene.add(rightBorder);
       scene.add(topBorder);
       scene.add(downBorder);
-      scene.add(sphere);
+      scene.add(ball);
       scene.add(floor);
       scene.add(cpu);
       scene.add(user);
 
       var borders = [ leftBorder, rightBorder, topBorder, downBorder ];
 
-      animate(sphere, cpu, user, borders, renderer, scene, camera);
+      animate(ball, cpu, user, borders, renderer, scene, camera);
    }
 
-   function animate(sphere, cpu, user, borders, renderer, scene, camera) {
-      checkCollision(sphere, borders);
+   function animate(ball, cpu, user, borders, renderer, scene, camera) {
+      checkCollision(ball, borders);
 
-      sphere.position.x += stepX;
-      sphere.position.y += stepY;
+      ball.position.x += stepX;
+      ball.position.y += stepY;
+
+      // Actualizo posicion de la raqueta user
+      moveUser(user);
 
       renderer.render(scene, camera);
 
       requestAnimationFrame(function() {
-         animate(sphere, cpu, user, borders, renderer, scene, camera);
+         animate(ball, cpu, user, borders, renderer, scene, camera);
       });
    }
 
@@ -79,13 +87,13 @@
       return light;
    }
 
-   function getSphere() {
+   function getBall() {
       var geometry = new THREE.SphereGeometry(1, 20, 20);
       var material = new THREE.MeshNormalMaterial();
       var mesh = new THREE.Mesh(geometry, material);
       mesh.position.z = 1;
       mesh.castShadow = true;
-      mesh.name = "sphere";
+      mesh.name = "ball";
 
       return mesh;
    }
@@ -121,7 +129,7 @@
    }
 
    // CPU
-   function getcpu(){
+   function getCpu(){
      var geometry = new THREE.BoxGeometry(3, 1, 3);
      var material = new THREE.MeshNormalMaterial();
      var mesh= new THREE.Mesh(geometry, material);
@@ -133,27 +141,49 @@
    }
 
    // USER
-   function getuser(){
+   function getUser(){
      var geometry = new THREE.BoxGeometry(3, 1, 3);
      var material = new THREE.MeshNormalMaterial();
      var mesh= new THREE.Mesh(geometry, material);
      mesh.receiveShadow = true;
-     mesh.position.set(-3, -8.5, 0);
+     mesh.position.set(user_x, user_y, user_z);
      mesh.name = "user";
 
      return mesh;
    }
 
+    function moveUser(user){
+      window.onkeydown = (e) => {
+        e.preventDefault();
+        switch (e.key) {
+          case 'ArrowLeft':
+            if(user.position.x > -3){
+              user.position.x -= 1;
+            }
+            console.log('izquierda', user.position.x)
+            break;
+          case 'ArrowRight':
+            if(user.position.x < 3){
+              user.position.x += 1;
+            }
+            console.log('derecha', user.position.x)
+            break;
+          default:
+            break;
+        }
+      }
+    }
 
 
 
-   function checkCollision(sphere, borders) {
-      var originPosition = sphere.position.clone();
+   function checkCollision(ball, borders) {
+      var originPosition = ball.position.clone();
 
-      for (var i = 0; i < sphere.geometry.vertices.length; i++) {
-         var localVertex = sphere.geometry.vertices[i].clone();
-         var globalVertex = localVertex.applyMatrix4(sphere.matrix);
-         var directionVector = globalVertex.sub(sphere.position);
+
+      for (var i = 0; i < ball.geometry.vertices.length; i++) {
+         var localVertex = ball.geometry.vertices[i].clone();
+         var globalVertex = localVertex.applyMatrix4(ball.matrix);
+         var directionVector = globalVertex.sub(ball.position);
          var ray = new THREE.Raycaster(originPosition, directionVector.clone().normalize());
          var collisionResults = ray.intersectObjects(borders);
          if (collisionResults.length > 0 && collisionResults[0].distance < directionVector.length()) {
@@ -168,6 +198,7 @@
          }
       }
    }
+
 </script>
 </head>
 
