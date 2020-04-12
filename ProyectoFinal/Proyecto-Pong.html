@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>Three.js: PROYECTO FINAL: PONG</title>S
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/103/three.min.js"></script>
+
+<script>
+   var stepX = 0.15;
+   var stepY = 0.25;
+   var sizeBall = 1;
+   //-- Variables para la raqueta del user
+   var user_x = -3; // coordenada x
+   var user_y = -8.5; // coordenada y
+   var user_z = 0; // coordenada z
+   //-- Variables longitud
+   var longUser = 3;
+   var longCpu = 3;
+   //-- Limites izquierdo y derecho
+   var maxLeftBorder = -7;
+   var maxRightBorder = 7;
+
+   function init() {
+      var scene = new THREE.Scene();
+      var sceneWidth = window.innerWidth - 20;
+      var sceneHeight = window.innerHeight - 20;
+
+      var camera = new THREE.PerspectiveCamera(90, sceneWidth / sceneHeight, 0.01, 100);
+      camera.position.set(0, -10, 15);
+      camera.lookAt(scene.position);
+
+      var renderer = new THREE.WebGLRenderer({
+         antialias : true
+      });
+      renderer.shadowMap.enabled = true;
+      renderer.setSize(sceneWidth, sceneHeight);
+      document.body.appendChild(renderer.domElement);
+
+      var light = getLight();
+      var leftBorder = getBorder("left", 1, 20, 2, maxLeftBorder, 0, 0);
+      var rightBorder = getBorder("right", 1, 20, 2, maxRightBorder, 0, 0);
+      var topBorder = getBorder("top", longCpu, 1, 2, 0, 10, 0);
+      var downBorder = getBorder("down", longUser, 1, 2, 0, -9.5, 0);
+      var ball = getBall();
+      var floor = getFloor();
+
+      scene.add(light);
+      scene.add(leftBorder);
+      scene.add(rightBorder);
+      scene.add(topBorder);
+      scene.add(downBorder);
+      scene.add(ball);
+      scene.add(floor);
+
+
+      var borders = [ leftBorder, rightBorder, topBorder, downBorder ];
+
+      animate(ball, borders, renderer, scene, camera);
+   }
+
+   function animate(ball, borders, renderer, scene, camera) {
+      cpu = borders[2];
+      user = borders[3];
+      checkCollision(ball, borders, cpu, user);
+
+      ball.position.x += stepX;
+      ball.position.y += stepY;
+
+      // Actualizo posicion de la raqueta cpu
+      moveCpu(cpu, ball);
+
+      // Actualizo posicion de la raqueta user
+      moveUser(user);
+
+      renderer.render(scene, camera);
+
+      requestAnimationFrame(function() {
+         animate(ball, borders, renderer, scene, camera);
+      });
+   }
+
+   function getLight() {
+      var light = new THREE.DirectionalLight();
+      light.position.set(4, 4, 4);
+      light.castShadow = true;
+      light.shadow.camera.near = 0;
+      light.shadow.camera.far = 16;
+      light.shadow.camera.left = -8;
+      light.shadow.camera.right = 5;
+      light.shadow.camera.top = 10;
+      light.shadow.camera.bottom = -10;
+      light.shadow.mapSize.width = 4096;
+      light.shadow.mapSize.height = 4096;
+      return light;
+   }
+
+   function getBall() {
+      var geometry = new THREE.SphereGeometry(sizeBall, 20, 20);
+      var mesh = new THREE.Mesh(geometry, getMaterial('Ball'));
+      mesh.position.z = 1;
+      mesh.castShadow = true;
+      mesh.name = "ball";
+
+      return mesh;
+   }
+
+   function getFloor() {
+      var geometry = new THREE.PlaneGeometry(15, 20);
+      var mesh = new THREE.Mesh(geometry, getMaterial('Floor'));
+      mesh.receiveShadow = true;
+
+      return mesh;
+   }
+
+   function getBorder(name, x, y, z, posX, posY, posZ) {
+      var geometry = new THREE.BoxGeometry(x, y, z);
+      var mesh = new THREE.Mesh(geometry, getMaterial('Border'));
+      mesh.receiveShadow = true;
+      mesh.position.set(posX, posY, posZ);
+      mesh.name = name;
+
+      return mesh;
+   }
+
+   function getMaterial(name) {
+     switch (name) {
+      case 'Border':
+        var texture = new THREE.TextureLoader().load("wood.png");
+        break;
+      case 'Floor':
+        var texture = new THREE.TextureLoader().load("floor.jpg");
+        break;
+      case 'Ball':
+        var texture = new THREE.TextureLoader().load("ball.jpg");
+        break;
+      case 'Users':
+        var texture = new THREE.TextureLoader().load("users.jpg");
+        break;
+     }
+      var material = new THREE.MeshPhysicalMaterial({
+         map : texture
+      });
+      material.map.wrapS = material.map.wrapT = THREE.RepeatWrapping;
+      material.map.repeat.set(4, 4);
+      material.side = THREE.DoubleSide;
+
+      return material;
+   }
+
+  //-- CPU
+   function moveCpu(cpu, ball){
+     cpu.position.x = ball.position.x * 0.6;
+     if (cpu.position.x > 5){
+       cpu.position.x = 5;
+     }if (cpu.position.x < -5){
+        cpu.position.x = -5;
+     }
+   }
+
+   //-- USER
+      function moveUser(user){
+      window.onkeydown = (e) => {
+        e.preventDefault();
+        switch (e.key) {
+          case 'ArrowLeft':
+            if(user.position.x > -5){
+              user.position.x -= 1;
+            }
+            console.log('izquierda', user.position.x)
+            break;
+          case 'ArrowRight':
+            if(user.position.x < 5){
+              user.position.x += 1;
+            }
+            console.log('derecha', user.position.x)
+            break;
+          default:
+            break;
+        }
+      }
+    }
+
+
+   function checkCollision(ball, borders, cpu, user) {
+
+      //-- Right and Left Collision
+      if(ball.position.x >= (maxRightBorder - sizeBall) || ball.position.x <= (maxLeftBorder + sizeBall)){
+        stepX *= -1;
+      }
+
+      //-- Cpu Collision
+      if ((ball.position.y + sizeBall) <= cpu.position.y && (ball.position.y + sizeBall) >= cpu.position.y){
+          if (ball.position.x + sizeBall >= (cpu.position.x - longUser/2)  &&  ball.position.x -  sizeBall <= (cpu.position.x + longUser/2)) {
+            stepY *= -1;
+          }else {
+            stepY *= -1;
+            console.log('punto cpu');
+          }
+      }
+      //-- User Collision
+      if ((ball.position.y - sizeBall) >= user.position.y && (ball.position.y - sizeBall) <= user.position.y ){
+        if (ball.position.x + sizeBall >= (user.position.x - longUser/2) && ball.position.x - sizeBall  <= (user.position.x + longUser/2)){
+          stepY *= -1;
+        }else {
+          stepY *= -1;
+          console.log('punto user');
+        }
+      }
+   }
+
+</script>
+</head>
+
+<body onload="init()">
+</body>
+
+</html>
