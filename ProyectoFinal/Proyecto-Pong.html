@@ -2,24 +2,25 @@
 <html>
 
 <head>
-<title>Three.js: PROYECTO FINAL: PONG</title>S
-
+<title>Three.js: PROYECTO FINAL: PONG</title>
+<link rel="stylesheet" href="pong.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/103/three.min.js"></script>
 
 <script>
    var stepX = 0.15;
    var stepY = 0.25;
    var sizeBall = 1;
-   //-- Variables para la raqueta del user
-   var user_x = -3; // coordenada x
-   var user_y = -8.5; // coordenada y
-   var user_z = 0; // coordenada z
    //-- Variables longitud
    var longUser = 3;
    var longCpu = 3;
    //-- Limites izquierdo y derecho
    var maxLeftBorder = -7;
    var maxRightBorder = 7;
+   //-- Point counter
+   var counterUser = 0;
+   var counterCpu = 0;
+   //-- variable startGame
+   var startGame = false;
 
    function init() {
       var scene = new THREE.Scene();
@@ -40,21 +41,21 @@
       var light = getLight();
       var leftBorder = getBorder("left", 1, 20, 2, maxLeftBorder, 0, 0);
       var rightBorder = getBorder("right", 1, 20, 2, maxRightBorder, 0, 0);
-      var topBorder = getBorder("top", longCpu, 1, 2, 0, 10, 0);
-      var downBorder = getBorder("down", longUser, 1, 2, 0, -9.5, 0);
+      var cpu = getBorder("top", longCpu, 1, 2, 0, 10, 0);
+      var user = getBorder("down", longUser, 1, 2, 0, -9.5, 0);
       var ball = getBall();
       var floor = getFloor();
 
       scene.add(light);
       scene.add(leftBorder);
       scene.add(rightBorder);
-      scene.add(topBorder);
-      scene.add(downBorder);
+      scene.add(cpu);
+      scene.add(user);
       scene.add(ball);
       scene.add(floor);
+;
 
-
-      var borders = [ leftBorder, rightBorder, topBorder, downBorder ];
+      var borders = [ leftBorder, rightBorder, cpu, user];
 
       animate(ball, borders, renderer, scene, camera);
    }
@@ -63,15 +64,17 @@
       cpu = borders[2];
       user = borders[3];
       checkCollision(ball, borders, cpu, user);
-
-      ball.position.x += stepX;
-      ball.position.y += stepY;
-
+      getPointCounter(ball);
+      // Actualizo posicion de la raqueta user
+      moveUser(user);
+      // Actualizo posicion bola ball
+      if(startGame){
+        ball.position.x += stepX;
+        ball.position.y += stepY;
+      }
       // Actualizo posicion de la raqueta cpu
       moveCpu(cpu, ball);
 
-      // Actualizo posicion de la raqueta user
-      moveUser(user);
 
       renderer.render(scene, camera);
 
@@ -151,10 +154,10 @@
   //-- CPU
    function moveCpu(cpu, ball){
      cpu.position.x = ball.position.x * 0.6;
-     if (cpu.position.x > 5){
-       cpu.position.x = 5;
-     }if (cpu.position.x < -5){
-        cpu.position.x = -5;
+     if (cpu.position.x > 7){
+       cpu.position.x = 7;
+     }if (cpu.position.x < -7){
+        cpu.position.x = -7;
      }
    }
 
@@ -167,13 +170,13 @@
             if(user.position.x > -5){
               user.position.x -= 1;
             }
-            console.log('izquierda', user.position.x)
             break;
           case 'ArrowRight':
             if(user.position.x < 5){
               user.position.x += 1;
             }
-            console.log('derecha', user.position.x)
+          case ' ':
+            startGame = true;
             break;
           default:
             break;
@@ -183,7 +186,7 @@
 
 
    function checkCollision(ball, borders, cpu, user) {
-
+     /*
       //-- Right and Left Collision
       if(ball.position.x >= (maxRightBorder - sizeBall) || ball.position.x <= (maxLeftBorder + sizeBall)){
         stepX *= -1;
@@ -193,26 +196,75 @@
       if ((ball.position.y + sizeBall) <= cpu.position.y && (ball.position.y + sizeBall) >= cpu.position.y){
           if (ball.position.x + sizeBall >= (cpu.position.x - longUser/2)  &&  ball.position.x -  sizeBall <= (cpu.position.x + longUser/2)) {
             stepY *= -1;
-          }else {
-            stepY *= -1;
-            console.log('punto cpu');
           }
       }
       //-- User Collision
       if ((ball.position.y - sizeBall) >= user.position.y && (ball.position.y - sizeBall) <= user.position.y ){
         if (ball.position.x + sizeBall >= (user.position.x - longUser/2) && ball.position.x - sizeBall  <= (user.position.x + longUser/2)){
           stepY *= -1;
-        }else {
-          stepY *= -1;
-          console.log('punto user');
         }
       }
+  */
+      var originPosition = ball.position.clone();
+
+      for (var i = 0; i < ball.geometry.vertices.length; i++) {
+         var localVertex = ball.geometry.vertices[i].clone();
+         var globalVertex = localVertex.applyMatrix4(ball.matrix);
+         var directionVector = globalVertex.sub(ball.position);
+         var ray = new THREE.Raycaster(originPosition, directionVector.clone().normalize());
+         var collisionResults = ray.intersectObjects(borders);
+         if (collisionResults.length > 0 && collisionResults[0].distance < directionVector.length()) {
+            // Collision detected
+            if (collisionResults[0].object.name == "left" || collisionResults[0].object.name == "right") {
+               stepX *= -1;
+            }
+            if (collisionResults[0].object.name == "down" || collisionResults[0].object.name == "top") {
+               stepY *= -1;
+            }
+            break;
+         }
+      }
+
    }
+
+   //
+
+   function getPointCounter(ball){
+     if (ball.position.y < -10){
+        ball.position.x = 0;
+        ball.position.y = 0;
+        startGame = false;
+        stepY = -stepY;
+        counterCpu += 1;
+    }
+
+    if (ball.position.y > 10){
+        ball.position.x = 0;
+        ball.position.y = 0;
+        startGame = false;
+        stepY = -stepY;
+        counterUser += 1;
+    }
+
+    if((counterCpu || counterUser) == 5){
+     startGame = false;
+     if(counterCpu == 5){
+       console.log('The winner is: CPU');
+     }else {
+       console.log('The winner is: User');
+     }
+     counterCpu = 0;
+     counterUser = 0;
+   }
+   document.getElementById("points").innerHTML = (`CPU: ${counterCpu} - User ${counterUser}`);
+
+ }
+
 
 </script>
 </head>
-
 <body onload="init()">
+  <h1 id = points> CPU: 0 - User: 0</h1>
 </body>
 
 </html>
