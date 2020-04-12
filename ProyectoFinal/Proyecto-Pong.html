@@ -98,6 +98,7 @@
       return light;
    }
 
+
    function getBall() {
       var geometry = new THREE.SphereGeometry(sizeBall, 20, 20);
       var mesh = new THREE.Mesh(geometry, getMaterial('Ball'));
@@ -186,48 +187,27 @@
 
 
    function checkCollision(ball, borders, cpu, user) {
-     /*
-      //-- Right and Left Collision
-      if(ball.position.x >= (maxRightBorder - sizeBall) || ball.position.x <= (maxLeftBorder + sizeBall)){
-        stepX *= -1;
-      }
+    var originPosition = ball.position.clone();
 
-      //-- Cpu Collision
-      if ((ball.position.y + sizeBall) <= cpu.position.y && (ball.position.y + sizeBall) >= cpu.position.y){
-          if (ball.position.x + sizeBall >= (cpu.position.x - longUser/2)  &&  ball.position.x -  sizeBall <= (cpu.position.x + longUser/2)) {
-            stepY *= -1;
+    for (var i = 0; i < ball.geometry.vertices.length; i++) {
+       var localVertex = ball.geometry.vertices[i].clone();
+       var globalVertex = localVertex.applyMatrix4(ball.matrix);
+       var directionVector = globalVertex.sub(ball.position);
+       var ray = new THREE.Raycaster(originPosition, directionVector.clone().normalize());
+       var collisionResults = ray.intersectObjects(borders);
+       if (collisionResults.length > 0 && collisionResults[0].distance < directionVector.length()) {
+          // Collision detected
+          if (collisionResults[0].object.name == "left" || collisionResults[0].object.name == "right") {
+             stepX *= -1;
           }
-      }
-      //-- User Collision
-      if ((ball.position.y - sizeBall) >= user.position.y && (ball.position.y - sizeBall) <= user.position.y ){
-        if (ball.position.x + sizeBall >= (user.position.x - longUser/2) && ball.position.x - sizeBall  <= (user.position.x + longUser/2)){
-          stepY *= -1;
-        }
-      }
-  */
-      var originPosition = ball.position.clone();
+          if (collisionResults[0].object.name == "down" || collisionResults[0].object.name == "top") {
+             stepY *= -1;
+          }
+          break;
+       }
+    }
+  }
 
-      for (var i = 0; i < ball.geometry.vertices.length; i++) {
-         var localVertex = ball.geometry.vertices[i].clone();
-         var globalVertex = localVertex.applyMatrix4(ball.matrix);
-         var directionVector = globalVertex.sub(ball.position);
-         var ray = new THREE.Raycaster(originPosition, directionVector.clone().normalize());
-         var collisionResults = ray.intersectObjects(borders);
-         if (collisionResults.length > 0 && collisionResults[0].distance < directionVector.length()) {
-            // Collision detected
-            if (collisionResults[0].object.name == "left" || collisionResults[0].object.name == "right") {
-               stepX *= -1;
-            }
-            if (collisionResults[0].object.name == "down" || collisionResults[0].object.name == "top") {
-               stepY *= -1;
-            }
-            break;
-         }
-      }
-
-   }
-
-   //
 
    function getPointCounter(ball){
      if (ball.position.y < -10){
@@ -257,7 +237,6 @@
      counterUser = 0;
    }
    document.getElementById("points").innerHTML = (`CPU: ${counterCpu} - User ${counterUser}`);
-
  }
 
 
