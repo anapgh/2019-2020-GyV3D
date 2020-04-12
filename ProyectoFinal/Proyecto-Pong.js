@@ -173,6 +173,7 @@ function moveUser(user){
         }
         break;
       case ' ':
+        document.getElementById("display").innerHTML = ('')
         startGame = true;
         break;
       default:
@@ -224,8 +225,10 @@ function getPointCounter(ball){
     startGame = false;
     if(counterCpu == 5){
       console.log('The winner is: CPU');
+      document.getElementById("display").innerHTML = (` CPU wins! ${counterCpu} - ${counterUser}. Press space to start again`);
     }else {
       console.log('The winner is: User');
+      document.getElementById("display").innerHTML = (` User wins! ${counterCpu} - ${counterUser}. Press space to start again`);
     }
     counterCpu = 0;
     counterUser = 0;

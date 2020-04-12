@@ -3,10 +3,16 @@ body{
 }
 
 h1{
-    width: 50%;
     font-size: 40px;
     text-align: center;
     color : white;
     background-color: pink;
-    margin: auto;
+    margin-left: 600px;
+    margin-right: 600px;
+}
+
+h2{
+  font-size: 60px;
+  text-align: center;
+  color : white;
 }
