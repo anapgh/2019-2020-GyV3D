@@ -7,6 +7,9 @@ var sizeBall = 1;
 var v_SpeedBall = 1;
 var v_Max = 2;
 var v_Min = 1;
+//-- variable Angulo
+var a_AngleBall = 1;
+
 //-- Variables longitud
 var longUser = 3;
 var longCpu = 3;
@@ -106,7 +109,7 @@ function getBall() {
 
 function moveBall(ball){
   if(startGame){
-   ball.position.x += stepX * v_SpeedBall;
+   ball.position.x += stepX * a_AngleBall;
    ball.position.y += stepY * v_SpeedBall;
   }
 }
@@ -197,9 +200,15 @@ function moveUser(user){
   }
 }
 
-function speedBallDown(user){
+//-- Velocidad de la bola
+function speedBall(user, cpu, typeBorder){
   console.log('Velocidad: ' , v_SpeedBall);
-  diference = Math.abs(pos_UserX - user.position.x);
+  //Diferencia entre posicion anterior y actual
+  if(typeBorder == 'top'){
+    diference = Math.abs(pos_CpuX - cpu.position.x);
+  }else if (typeBorder == 'down') {
+    diference = Math.abs(pos_UserX - user.position.x);
+  }
   console.log('Diferencia ', diference);
   if(diference < v_Min){
     v_SpeedBall = v_Min;
@@ -211,19 +220,28 @@ function speedBallDown(user){
   console.log('incremento bola ', v_SpeedBall);
 }
 
-function speedBallTop(cpu){
-  console.log('Velocidad: ' , v_SpeedBall);
-  diference = Math.abs(pos_CpuX - cpu.position.x);
-  console.log('Diferencia ', diference);
-  if(diference < v_Min){
-    v_SpeedBall = v_Min;
-  }else if (diference > v_Max) {
-    v_SpeedBall = v_Max;
-  }else{
-    v_SpeedBall = diference;
+//-- Angulo de la bola
+function angleBall(user, cpu, typeBorder, ball){
+  console.log('Angulo: ' , a_AngleBall);
+  //Diferencia entre posicion anterior y actual
+  if(typeBorder == 'top'){
+    distance = Math.abs(cpu.position.x - ball.position.x);
+  }else if (typeBorder == 'down') {
+    distance = Math.abs(user.position.x - ball.position.x);
   }
-  console.log('incremento bola ', v_SpeedBall);
+  console.log('Distancia ', distance);
+  if(distance < v_Min){
+     a_AngleBall = v_Min;
+  }else if (distance > v_Max) {
+     a_AngleBall = v_Max;
+  }else{
+     a_AngleBall = distance;
+  }
+  console.log('Angulo incre bola ',  a_AngleBall);
 }
+
+
+
 
 function checkCollision(ball, borders, cpu, user) {
   var originPosition = ball.position.clone();
@@ -241,16 +259,20 @@ function checkCollision(ball, borders, cpu, user) {
       }
       if (collisionResults[0].object.name == "down"){
         stepY *= -1;
+        //-- Guarda la posicion de la Cpu cuando da abajo
         pos_CpuX = cpu.position.x;
         console.log('posicion actual ', pos_CpuX);
-        speedBallDown(user);
+        speedBall(user, cpu,'down');
+        angleBall(user, cpu, 'down', ball);
       }
 
       if (collisionResults[0].object.name == "top") {
         stepY *= -1;
+        //-- Guarda la posicion del User cuando da arriba
         pos_UserX = user.position.x;
         console.log('posicion actual ', pos_UserX)
-        speedBallTop(cpu);
+        speedBall(user, cpu,'top');
+        angleBall(user, cpu, 'top', ball);
       }
       break;
     }
