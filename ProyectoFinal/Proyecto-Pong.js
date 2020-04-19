@@ -3,6 +3,10 @@ console.log('Ejecutando el js...');
 var stepX = 0.15;
 var stepY = 0.25;
 var sizeBall = 1;
+//-- variable de velocidad
+var v_SpeedBall = 1;
+var v_Max = 2;
+var v_Min = 1;
 //-- Variables longitud
 var longUser = 3;
 var longCpu = 3;
@@ -14,6 +18,10 @@ var counterUser = 0;
 var counterCpu = 0;
 //-- variable startGame
 var startGame = false;
+//-- inicial position x
+var pos_CpuX = 0;
+var pos_UserX = 0;
+
 
 function init() {
   var scene = new THREE.Scene();
@@ -46,7 +54,6 @@ function init() {
   scene.add(user);
   scene.add(ball);
   scene.add(floor);
-
 
   var borders = [ leftBorder, rightBorder, cpu, user];
 
@@ -99,8 +106,8 @@ function getBall() {
 
 function moveBall(ball){
   if(startGame){
-   ball.position.x += stepX;
-   ball.position.y += stepY;
+   ball.position.x += stepX * v_SpeedBall;
+   ball.position.y += stepY * v_SpeedBall;
   }
 }
 
@@ -122,13 +129,21 @@ function getBorder(name, x, y, z, posX, posY, posZ) {
   return mesh;
 }
 
+
 function getMaterial(name) {
+  var floorChecked = document.querySelector('input[name="floor"]:checked');
   switch (name) {
     case 'Border':
       var texture = new THREE.TextureLoader().load("wood.png");
       break;
     case 'Floor':
-      var texture = new THREE.TextureLoader().load("floor.jpg");
+      if(floorChecked == 'Textura1'){
+        var texture = new THREE.TextureLoader().load("floor.jpg");
+      }else if (floorChecked == 'Textura2') {
+        var texture = new THREE.TextureLoader().load("wood.png");
+      }else{
+        var texture = new THREE.TextureLoader().load("users.jpg");
+      }
       break;
     case 'Ball':
       var texture = new THREE.TextureLoader().load("ball.jpg");
@@ -164,12 +179,12 @@ function moveUser(user){
     switch (e.key) {
       case 'ArrowLeft':
         if(user.position.x > -5){
-          user.position.x -= 1;
+          user.position.x -= 0.35;
         }
         break;
       case 'ArrowRight':
         if(user.position.x < 5){
-          user.position.x += 1;
+          user.position.x += 0.35;
         }
         break;
       case ' ':
@@ -180,6 +195,34 @@ function moveUser(user){
         break;
     }
   }
+}
+
+function speedBallDown(user){
+  console.log('Velocidad: ' , v_SpeedBall);
+  diference = Math.abs(pos_UserX - user.position.x);
+  console.log('Diferencia ', diference);
+  if(diference < v_Min){
+    v_SpeedBall = v_Min;
+  }else if (diference > v_Max) {
+    v_SpeedBall = v_Max;
+  }else{
+    v_SpeedBall = diference;
+  }
+  console.log('incremento bola ', v_SpeedBall);
+}
+
+function speedBallTop(cpu){
+  console.log('Velocidad: ' , v_SpeedBall);
+  diference = Math.abs(pos_CpuX - cpu.position.x);
+  console.log('Diferencia ', diference);
+  if(diference < v_Min){
+    v_SpeedBall = v_Min;
+  }else if (diference > v_Max) {
+    v_SpeedBall = v_Max;
+  }else{
+    v_SpeedBall = diference;
+  }
+  console.log('incremento bola ', v_SpeedBall);
 }
 
 function checkCollision(ball, borders, cpu, user) {
@@ -196,8 +239,18 @@ function checkCollision(ball, borders, cpu, user) {
       if (collisionResults[0].object.name == "left" || collisionResults[0].object.name == "right") {
         stepX *= -1;
       }
-      if (collisionResults[0].object.name == "down" || collisionResults[0].object.name == "top") {
+      if (collisionResults[0].object.name == "down"){
         stepY *= -1;
+        pos_CpuX = cpu.position.x;
+        console.log('posicion actual ', pos_CpuX);
+        speedBallDown(user);
+      }
+
+      if (collisionResults[0].object.name == "top") {
+        stepY *= -1;
+        pos_UserX = user.position.x;
+        console.log('posicion actual ', pos_UserX)
+        speedBallTop(cpu);
       }
       break;
     }
@@ -232,6 +285,8 @@ function getPointCounter(ball){
     }
     counterCpu = 0;
     counterUser = 0;
+
   }
 document.getElementById("points").innerHTML = (`CPU: ${counterCpu} - User ${counterUser}`);
+
 }
