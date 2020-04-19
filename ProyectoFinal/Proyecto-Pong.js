@@ -167,7 +167,16 @@ function getMaterial(name) {
 
 //-- CPU
 function moveCpu(cpu, ball){
-  cpu.position.x = ball.position.x * 0.6;
+  //-- Establezco la dificultad
+  var level = document.querySelector('input[name="level"]:checked').value;
+  if (level == 'Easy'){
+    cpu.position.x = ball.position.x * 0.2;
+  }else if (level == 'Medium') {
+    cpu.position.x = ball.position.x * 0.6;
+  }else if (level == 'Impossible') {
+    cpu.position.x = ball.position.x;
+  }
+  //-- Limito el movimiento
   if (cpu.position.x > 7){
     cpu.position.x = 7;
   }if (cpu.position.x < -7){
@@ -241,8 +250,6 @@ function angleBall(user, cpu, typeBorder, ball){
 }
 
 
-
-
 function checkCollision(ball, borders, cpu, user) {
   var originPosition = ball.position.clone();
 
@@ -261,7 +268,7 @@ function checkCollision(ball, borders, cpu, user) {
         stepY *= -1;
         //-- Guarda la posicion de la Cpu cuando da abajo
         pos_CpuX = cpu.position.x;
-        console.log('posicion actual ', pos_CpuX);
+        //-- velocidad y angulo de la bola
         speedBall(user, cpu,'down');
         angleBall(user, cpu, 'down', ball);
       }
@@ -270,7 +277,7 @@ function checkCollision(ball, borders, cpu, user) {
         stepY *= -1;
         //-- Guarda la posicion del User cuando da arriba
         pos_UserX = user.position.x;
-        console.log('posicion actual ', pos_UserX)
+        //-- velocidad y angulo de la bola
         speedBall(user, cpu,'top');
         angleBall(user, cpu, 'top', ball);
       }
