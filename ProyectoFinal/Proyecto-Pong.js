@@ -5,11 +5,10 @@ var stepY = 0.25;
 var sizeBall = 1;
 //-- variable de velocidad
 var v_SpeedBall = 1;
-var v_Max = 2;
-var v_Min = 1;
+var v_Max = 1.5;
+var v_Min = 0.75;
 //-- variable Angulo
 var a_AngleBall = 1;
-
 //-- Variables longitud
 var longUser = 3;
 var longCpu = 3;
@@ -19,6 +18,7 @@ var maxRightBorder = 7;
 //-- Point counter
 var counterUser = 0;
 var counterCpu = 0;
+var counterText = 'CPU 0 - User 0';
 //-- variable startGame
 var startGame = false;
 //-- inicial position x
@@ -61,13 +61,14 @@ function init() {
   var borders = [ leftBorder, rightBorder, cpu, user];
 
   animate(ball, borders, renderer, scene, camera);
+  getText('counter', scene);
 }
 
 function animate(ball, borders, renderer, scene, camera) {
   cpu = borders[2];
   user = borders[3];
   checkCollision(ball, borders, cpu, user);
-  getPointCounter(ball);
+  getPointCounter(ball, scene);
   // Actualizo posicion de la raqueta user
   moveUser(user);
   // Actualizo posicion bola ball
@@ -132,9 +133,8 @@ function getBorder(name, x, y, z, posX, posY, posZ) {
   return mesh;
 }
 
-
 function getMaterial(name) {
-  var floorChecked = document.querySelector('input[name="floor"]:checked');
+  var floorChecked = document.querySelector('input[name="floor"]:checked').value;
   switch (name) {
     case 'Border':
       var texture = new THREE.TextureLoader().load("wood.png");
@@ -163,6 +163,33 @@ function getMaterial(name) {
   material.side = THREE.DoubleSide;
 
   return material;
+}
+
+function getText(name, scene){
+  var loader = new THREE.FontLoader();
+  loader.load( 'The Heart Chakra_Regular.json', function ( font ) {
+    var selectedObject = scene.getObjectByName(name);
+    if(selectedObject){
+      scene.remove(selectedObject);
+    }
+    var geometry = new THREE.TextGeometry(counterText, {
+      font: font,
+      size: 5,
+      height: 0.5,
+      curveSegments: 12,
+      bevelEnabled: false,
+      bevelThickness: 0.1,
+      bevelSize: 0.1,
+      bevelSegments: 0.1
+    });
+    var textMaterial = new THREE.MeshNormalMaterial();
+    var text = new THREE.Mesh(geometry, textMaterial);
+    text.name = name;
+    text.position.set(-20,25,0);
+    text.rotation.x = -5;
+    scene.add(text);
+
+  });
 }
 
 //-- CPU
@@ -286,13 +313,15 @@ function checkCollision(ball, borders, cpu, user) {
   }
 }
 
-function getPointCounter(ball){
+function getPointCounter(ball, scene){
   if (ball.position.y < -10){
     ball.position.x = 0;
     ball.position.y = 0;
     startGame = false;
     stepY = -stepY;
     counterCpu += 1;
+    counterText = (`CPU: ${counterCpu} - User ${counterUser}`);
+    getText('counter', scene);
  }
 
   if (ball.position.y > 10){
@@ -301,21 +330,27 @@ function getPointCounter(ball){
     startGame = false;
     stepY = -stepY;
     counterUser += 1;
+    counterText = (`CPU: ${counterCpu} - User ${counterUser}`);
+    getText('counter', scene);
   }
 
   if((counterCpu || counterUser) == 5){
     startGame = false;
     if(counterCpu == 5){
       console.log('The winner is: CPU');
-      document.getElementById("display").innerHTML = (` CPU wins! ${counterCpu} - ${counterUser}. Press space to start again`);
-    }else {
+      counterText = (` CPU wins! ${counterCpu} - ${counterUser}. Press space to start again`);
+      getText('counter', scene);
+    }else{
       console.log('The winner is: User');
-      document.getElementById("display").innerHTML = (` User wins! ${counterCpu} - ${counterUser}. Press space to start again`);
+      counterText = (` User wins! ${counterCpu} - ${counterUser}. Press space to start again`)
+      getText('counter', scene);
     }
     counterCpu = 0;
     counterUser = 0;
-
   }
+
+//counterText = (`CPU: ${counterCpu} - User ${counterUser}`);
+
 document.getElementById("points").innerHTML = (`CPU: ${counterCpu} - User ${counterUser}`);
 
 }
