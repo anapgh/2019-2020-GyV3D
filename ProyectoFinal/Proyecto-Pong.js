@@ -174,7 +174,7 @@ function getText(name, scene){
     }
     var geometry = new THREE.TextGeometry(counterText, {
       font: font,
-      size: 5,
+      size: 3,
       height: 0.5,
       curveSegments: 12,
       bevelEnabled: false,
@@ -185,7 +185,7 @@ function getText(name, scene){
     var textMaterial = new THREE.MeshNormalMaterial();
     var text = new THREE.Mesh(geometry, textMaterial);
     text.name = name;
-    text.position.set(-20,25,0);
+    text.position.set(-12,40,0);
     text.rotation.x = -5;
     scene.add(text);
 
@@ -334,23 +334,16 @@ function getPointCounter(ball, scene){
     getText('counter', scene);
   }
 
-  if((counterCpu || counterUser) == 5){
+  if((counterCpu == 5) || (counterUser == 5)){
     startGame = false;
     if(counterCpu == 5){
-      console.log('The winner is: CPU');
-      counterText = (` CPU wins! ${counterCpu} - ${counterUser}. Press space to start again`);
+      counterText = (`CPU wins!\n${counterCpu} - ${counterUser}\nPress space to start again`);
       getText('counter', scene);
-    }else{
-      console.log('The winner is: User');
-      counterText = (` User wins! ${counterCpu} - ${counterUser}. Press space to start again`)
+    }else {
+      counterText = (`User wins!\n${counterCpu} - ${counterUser}\nPress space to start again`)
       getText('counter', scene);
     }
     counterCpu = 0;
     counterUser = 0;
   }
-
-//counterText = (`CPU: ${counterCpu} - User ${counterUser}`);
-
-document.getElementById("points").innerHTML = (`CPU: ${counterCpu} - User ${counterUser}`);
-
 }
