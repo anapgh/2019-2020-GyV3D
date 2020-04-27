@@ -1,30 +1,31 @@
 console.log('Ejecutando el js...');
 
+//-- Ball
 var stepX = 0.15;
 var stepY = 0.25;
 var sizeBall = 1;
-//-- variable de velocidad
+//-- Speed
 var v_SpeedBall = 1;
 var v_Max = 1.5;
 var v_Min = 0.75;
-//-- variable Angulo
+//-- Angle
 var a_AngleBall = 1;
-//-- Variables longitud
+//-- Length
 var longUser = 3;
 var longCpu = 3;
-//-- Limites izquierdo y derecho
+//-- Left and right limits
 var maxLeftBorder = -7;
 var maxRightBorder = 7;
 //-- Point counter
 var counterUser = 0;
 var counterCpu = 0;
 var counterText = 'CPU: 0 - USER: 0';
-//-- variable startGame
+//-- Start the game
 var startGame = false;
-//-- inicial position x
+//-- Initial position x of the cpu and user
 var pos_CpuX = 0;
 var pos_UserX = 0;
-//-- texturas
+//-- Floor texture
 var tex_floor;
 
 
@@ -70,6 +71,7 @@ function init() {
   };
   render();
 
+  //-- Get objects
   var light = getLight();
   var leftBorder = getBorder("left", 1, 20, 2, maxLeftBorder, 0, 0);
   var rightBorder = getBorder("right", 1, 20, 2, maxRightBorder, 0, 0);
@@ -78,6 +80,7 @@ function init() {
   var ball = getBall();
   var floor = getFloor("Floor");
 
+  //-- Add objects
   scene.add(light);
   scene.add(leftBorder);
   scene.add(rightBorder);
@@ -88,7 +91,7 @@ function init() {
 
   var borders = [ leftBorder, rightBorder, cpu, user];
 
-//-- Move USER
+//-- Move user
   window.onkeydown = (e) => {
     e.preventDefault();
     switch (e.key) {
@@ -113,17 +116,19 @@ function init() {
   }
 
   animate(ball, borders, renderer, scene, camera);
+  //-- Get the text with the counter
   getText('counter', scene);
 }
 
-function animate(ball, borders, renderer, scene, camera, backgroundScene, backgroundCamera) {
+function animate(ball, borders, renderer, scene, camera) {
   cpu = borders[2];
   user = borders[3];
   checkCollision(ball, borders, cpu, user);
+  //-- Get points
   getPointCounter(ball, scene);
-  // Actualizo posicion bola ball
+  //-- Update ball position
   moveBall(ball);
-  // Actualizo posicion de la raqueta cpu
+  //-- Update cpu position
   moveCpu(cpu, ball);
 
   renderer.render(scene, camera);
@@ -133,18 +138,21 @@ function animate(ball, borders, renderer, scene, camera, backgroundScene, backgr
   });
 }
 
+//-- Read floor texture
 function readTexture(scene){
   var object1 = scene.getObjectByName('Floor');
 
+  //-- if there is already an object with that name it is deleted
   if (object1){
     scene.remove(object1);
   }
-
+  //-- Get the texture from the html and add to scene
   tex_floor = document.querySelector('input[name="Floor"]:checked').value;
   floor = getFloor("Floor");
   scene.add(floor);
 }
 
+//-- LIGHT
 function getLight() {
   var light = new THREE.DirectionalLight();
   light.position.set(4, 4, 4);
@@ -160,6 +168,7 @@ function getLight() {
   return light;
 }
 
+//-- BALL
 function getBall() {
   var geometry = new THREE.SphereGeometry(sizeBall, 20, 20);
   var mesh = new THREE.Mesh(geometry, getMaterial('Ball'));
@@ -177,6 +186,7 @@ function moveBall(ball){
  }
 }
 
+//-- FLOOR
 function getFloor(name) {
   var geometry = new THREE.PlaneGeometry(15, 20);
   var mesh = new THREE.Mesh(geometry, getMaterial(name));
@@ -185,6 +195,7 @@ function getFloor(name) {
   return mesh;
 }
 
+//-- BORDERS
 function getBorder(name, x, y, z, posX, posY, posZ) {
   var geometry = new THREE.BoxGeometry(x, y, z);
   var mesh = new THREE.Mesh(geometry, getMaterial('Border'));
@@ -195,15 +206,16 @@ function getBorder(name, x, y, z, posX, posY, posZ) {
   return mesh;
 }
 
+//-- Put texture on the borders, ball and floor
 function getMaterial(name) {
   switch (name) {
     case 'Border':
       var texture = new THREE.TextureLoader().load("wood.png");
       break;
     case 'Floor':
-      if(tex_floor == 'Textura1'){
+      if(tex_floor == 'Texture1'){
         var texture = new THREE.TextureLoader().load("verde.png");
-      }else if (tex_floor == 'Textura2') {
+      }else if (tex_floor == 'Texture2') {
         var texture = new THREE.TextureLoader().load("azul.png");
       }else{
         var texture = new THREE.TextureLoader().load("rojo.png");
@@ -222,6 +234,7 @@ function getMaterial(name) {
   return material;
 }
 
+//-- Get the text of the point counter
 function getText(name, scene){
   var loader = new THREE.FontLoader();
   loader.load( 'Data Control_Latin.json', function ( font ) {
@@ -254,7 +267,7 @@ function getText(name, scene){
 
 //-- CPU
 function moveCpu(cpu, ball){
-  //-- Establezco la dificultad
+  //-- Set difficulty
   var level = document.querySelector('input[name="level"]:checked').value;
   if (level == 'Easy'){
     cpu.position.x = ball.position.x * 0.2;
@@ -263,7 +276,7 @@ function moveCpu(cpu, ball){
   }else if (level == 'Impossible') {
     cpu.position.x = ball.position.x;
   }
-  //-- Limito el movimiento
+  //-- Limit movement
   if (cpu.position.x > 7){
     cpu.position.x = 7;
   }if (cpu.position.x < -7){
@@ -272,9 +285,9 @@ function moveCpu(cpu, ball){
 }
 
 
-//-- Velocidad de la bola
+//-- Ball speed
 function speedBall(user, cpu, typeBorder){
-  //Diferencia entre posicion anterior y actual
+  //-- Difference between previous and current position
   if(typeBorder == 'top'){
     diference = Math.abs(pos_CpuX - cpu.position.x);
   }else if (typeBorder == 'down') {
@@ -289,9 +302,9 @@ function speedBall(user, cpu, typeBorder){
   }
 }
 
-//-- Angulo de la bola
+//-- Ball angle
 function angleBall(user, cpu, typeBorder, ball){
-  //Diferencia entre posicion anterior y actual
+  //-- Difference between position of racket and ball
   if(typeBorder == 'top'){
     distance = Math.abs(cpu.position.x - ball.position.x);
   }else if (typeBorder == 'down') {
@@ -323,18 +336,18 @@ function checkCollision(ball, borders, cpu, user) {
       }
       if (collisionResults[0].object.name == "down"){
         stepY *= -1;
-        //-- Guarda la posicion de la Cpu cuando da abajo
+        //-- Save the position of the CPU when it hits the bottom
         pos_CpuX = cpu.position.x;
-        //-- velocidad y angulo de la bola
+        //-- Ball speed and angle
         speedBall(user, cpu,'down');
         angleBall(user, cpu, 'down', ball);
       }
 
       if (collisionResults[0].object.name == "top") {
         stepY *= -1;
-        //-- Guarda la posicion del User cuando da arriba
+        //-- Save the position of the User when it hits the bottom
         pos_UserX = user.position.x;
-        //-- velocidad y angulo de la bola
+        //-- Ball speed and angle
         speedBall(user, cpu,'top');
         angleBall(user, cpu, 'top', ball);
       }
@@ -343,7 +356,9 @@ function checkCollision(ball, borders, cpu, user) {
   }
 }
 
+//-- Points Counter
 function getPointCounter(ball, scene){
+  //-- User counter
   if (ball.position.y < -10){
     ball.position.x = 0;
     ball.position.y = 0;
@@ -353,7 +368,7 @@ function getPointCounter(ball, scene){
     counterText = (`CPU: ${counterCpu} - USER: ${counterUser}`);
     getText('counter', scene);
  }
-
+  //-- CPU counter
   if (ball.position.y > 10){
     ball.position.x = 0;
     ball.position.y = 0;
@@ -364,6 +379,7 @@ function getPointCounter(ball, scene){
     getText('counter', scene);
   }
 
+  //-- Winners
   if((counterCpu == 5) || (counterUser == 5)){
     startGame = false;
     if(counterCpu == 5){

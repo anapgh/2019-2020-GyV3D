@@ -1,9 +1,23 @@
-body{
-    background-color: white;
+@font-face {
+  font-family: "Data";
+  src : url("data-latin.ttf");
 }
 
+
+body{
+    background-image: url('tierra2.jpg');
+    font-family: "Data";
+    font-size: 15px;
 }
+
 div{
-  color: white;
-  background-color: pink;
+  color: black;
+  background-color: rgba(255,255,255,0.8);
+  margin-bottom: 10px;
+  margin-right: 50px;
+  margin-left: 50px;
+  padding-bottom: 10px;
+  padding-top: 5px;
+  text-align: center;
+  border-radius: 20px;
 }

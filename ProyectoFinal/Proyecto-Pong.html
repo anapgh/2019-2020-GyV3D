@@ -4,16 +4,18 @@
     <title>PROYECTO FINAL: PONG</title>
     <link rel="stylesheet" href="pong.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/103/three.min.js"></script>
-    <script src = 'Prueba.js'></script>
+    <script src = 'Proyecto-Pong.js'></script>
   </head>
   <body onload="init()">
-    <div>
-      <p>Select yours textures</p>
+    <div id = "textures">
+      <p>SELECT YOURS TEXTURES</p>
       <b>Floor</b>
-      <input type="radio" name="Floor" value="Textura1"> Green Court
-      <input type="radio" name="Floor" value="Textura2"> Blue Court
-      <input type="radio" name="Floor" value="Textura3" checked> Red Court <br>
-      <p>Select your level</p>
+      <input type="radio" name="Floor" value="Texture1"> Green Court
+      <input type="radio" name="Floor" value="Texture2"> Blue Court
+      <input type="radio" name="Floor" value="Texture3" checked> Red Court <br>
+    </div>
+    <div id = "levels">
+      <p>SELECT YOUR LEVEL</p>
       <input type="radio" name="level" value="Easy" checked> <b>Easy</b>
       <input type="radio" name="level" value="Medium"> <b>Medium</b>
       <input type="radio" name="level" value="Impossible"> <b>Impossible</b>
