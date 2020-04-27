@@ -44,6 +44,32 @@ function init() {
   renderer.setSize(sceneWidth, sceneHeight);
   document.body.appendChild(renderer.domElement);
 
+  // Load the background texture
+  var texture = THREE.ImageUtils.loadTexture('publico3.jpg');
+  var backgroundMesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(3, 2, 0),
+      new THREE.MeshBasicMaterial({
+          map: texture
+      }));
+
+  backgroundMesh.material.depthTest = false;
+  backgroundMesh.material.depthWrite = false;
+
+  // Create your background scene
+  var backgroundScene = new THREE.Scene();
+  var backgroundCamera = new THREE.Camera();
+  backgroundScene.add(backgroundCamera);
+  backgroundScene.add(backgroundMesh);
+
+  // Rendering function
+  var render = function () {
+      requestAnimationFrame(render);
+      renderer.autoClear = false;
+      renderer.clear();
+      renderer.render(backgroundScene , backgroundCamera);
+  };
+  render();
+
   var light = getLight();
   var leftBorder = getBorder("left", 1, 20, 2, maxLeftBorder, 0, 0);
   var rightBorder = getBorder("right", 1, 20, 2, maxRightBorder, 0, 0);
@@ -62,7 +88,7 @@ function init() {
 
   var borders = [ leftBorder, rightBorder, cpu, user];
 
-//-- USER
+//-- Move USER
   window.onkeydown = (e) => {
     e.preventDefault();
     switch (e.key) {
@@ -78,6 +104,7 @@ function init() {
         break;
       case ' ':
         startGame = true;
+        //-- Read new texture of floor
         readTexture(scene);
         break;
       default:
@@ -89,7 +116,7 @@ function init() {
   getText('counter', scene);
 }
 
-function animate(ball, borders, renderer, scene, camera) {
+function animate(ball, borders, renderer, scene, camera, backgroundScene, backgroundCamera) {
   cpu = borders[2];
   user = borders[3];
   checkCollision(ball, borders, cpu, user);
@@ -183,10 +210,8 @@ function getMaterial(name) {
       }
       break;
     case 'Ball':
-      var texture = new THREE.TextureLoader().load("ball.jpg");
+      var texture = new THREE.TextureLoader().load("tenis.jpg");
       break;
-    case 'Texto':
-      var texture = new THREE.TextureLoader().load("wood.png");
   }
   var material = new THREE.MeshPhysicalMaterial({
     map : texture
@@ -199,7 +224,7 @@ function getMaterial(name) {
 
 function getText(name, scene){
   var loader = new THREE.FontLoader();
-  loader.load( 'The Heart Chakra_Regular.json', function ( font ) {
+  loader.load( 'Data Control_Latin.json', function ( font ) {
     var selectedObject = scene.getObjectByName(name);
     if(selectedObject){
       scene.remove(selectedObject);
@@ -214,13 +239,13 @@ function getText(name, scene){
       bevelSize: 0.1,
       bevelSegments: 0.1
     });
-    var texture = new THREE.TextureLoader().load("wood.png")
+    var texture = new THREE.TextureLoader().load("tierra2.jpg")
     var material = new THREE.MeshBasicMaterial({
-    map : texture
+     map : texture
     });
     var text = new THREE.Mesh(geometry, material);
     text.name = name;
-    text.position.set(-16,30,0);
+    text.position.set(-19,40,0);
     text.rotation.x = -5;
     scene.add(text);
 
