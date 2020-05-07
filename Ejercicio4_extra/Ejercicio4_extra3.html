@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Ejercicio 4 extra parte 3</title>
+</head>
+
+<body onload="init()">
+    <canvas id="myCanvas" width="640" height="480"></canvas>
+</body>
+<!--Libreria de JavaScript que nos permite utilizar glMatrix--->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.8.1/gl-matrix-min.js"></script>
+
+<script id="shaderVs" type="x-shader/x-vertex">
+    attribute vec4 a_Position;
+    attribute vec4 a_Color;
+    varying highp vec4 v_Color;
+    uniform mat4 u_Matrix;
+    void main() {
+        gl_Position = u_Matrix * a_Position;
+        v_Color = a_Color;
+    }
+</script>
+
+<script id="shaderFs" type="x-shader/x-fragment">
+    varying highp vec4 v_Color;
+    void main() {
+        gl_FragColor = v_Color;
+    }
+</script>
+
+<script>
+    var gl;
+    function init() {
+        // Get canvas object from the DOM
+        var canvas = document.getElementById("myCanvas");
+
+        // Init WebGL context
+        gl = canvas.getContext("webgl");
+        if (!gl) {
+            console.log("Failed to get the rendering context for WebGL");
+            return;
+        }
+
+        // Init shaders
+        var vs = document.getElementById('shaderVs').innerHTML;
+        var fs = document.getElementById('shaderFs').innerHTML;
+        if (!initShaders(gl, vs, fs)) {
+            console.log('Failed to intialize shaders.');
+            return;
+        }
+
+        // Write the positions of vertices to a vertex shader
+        var n = initVertexBuffers(gl);
+        if (n < 0) {
+            console.log('Failed to set the positions of the vertices');
+            return;
+        }
+
+        // Clear canvas
+        gl.clearColor(0.0, 0.0, 0.0, 1.0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+
+        // Draw
+        drawTransformations(); // Lo pintamos.
+    }
+
+    function initVertexBuffers(gl) {
+        // Vertices
+        var dim = 3;
+        var vertices = new Float32Array([
+          0.0,  0.0, 0.0, // Vertice 0 (centro del hexagono)
+          0.5,  0.0, 0.0, // Vertice 1
+          0.25, 0.5, 0.0, // Vertice 2
+         -0.25, 0.5, 0.0, // Vertice 3
+         -0.5,  0.0, 0.0, // Vertice 4
+         -0.25,-0.5, 0.0, // Vertice 5
+          0.25,-0.5, 0.0  // Vertice 6
+          ]);
+
+        // Create a buffer object
+        var vertexBuffer = gl.createBuffer();
+        if (!vertexBuffer) {
+            console.log('Failed to create the buffer object');
+            return -1;
+        }
+        gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+
+        // Assign the vertices in buffer object to a_Position variable
+        var a_Position = gl.getAttribLocation(gl.program, 'a_Position');
+        if (a_Position < 0) {
+            console.log('Failed to get the storage location of a_Position');
+            return -1;
+        }
+        gl.vertexAttribPointer(a_Position, dim, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(a_Position);
+
+        // Fragment color
+        // colores.
+        var colors = new Float32Array([
+          1.0, 0.0, 0.0, // Vertice 0
+          0.0, 1.0, 0.0, // Vertice 1
+          0.0, 1.0, 0.0, // Vertice 2
+          0.0, 1.0, 0.0, // Vertice 3
+          0.0, 1.0, 0.0, // Vertice 4
+          0.0, 1.0, 0.0, // Vertice 5
+          0.0, 1.0, 0.0, // Vertice 6
+        ]);
+
+        // Creamos los buffer para el color.
+        var trianglesColorBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, trianglesColorBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, colors, gl.STATIC_DRAW);
+        var a_Color = gl.getAttribLocation(gl.program, 'a_Color');
+        gl.vertexAttribPointer(a_Color, dim, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(a_Color);
+
+        var indices = new Uint16Array([
+          0, 1, 2, // Triangle 1
+          0, 2, 3, // Triangle 2
+          0, 3, 4, // Triangle 3
+          0, 4, 5, // Triangle 4
+          0, 5, 6, // Triangle 5
+          0, 6, 1, // Triangle 6
+        ]);
+
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.createBuffer());
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
+
+        // Return number of vertices
+        // Se dibujan, para ello, en esta función se le indica qué variable tiene los vértices y
+        // se devuelve el número de vértices a dibujar.
+        return indices.length;
+    }
+
+    function initShaders(gl, vs_source, fs_source) {
+        // Compile shaders
+        var vertexShader = makeShader(gl, vs_source, gl.VERTEX_SHADER);
+        var fragmentShader = makeShader(gl, fs_source, gl.FRAGMENT_SHADER);
+
+        // Create program
+        var glProgram = gl.createProgram();
+
+        // Attach and link shaders to the program
+        gl.attachShader(glProgram, vertexShader);
+        gl.attachShader(glProgram, fragmentShader);
+        gl.linkProgram(glProgram);
+        if (!gl.getProgramParameter(glProgram, gl.LINK_STATUS)) {
+            alert("Unable to initialize the shader program");
+            return false;
+        }
+
+        // Use program
+        gl.useProgram(glProgram);
+        gl.program = glProgram;
+
+        return true;
+    }
+
+    function makeShader(gl, src, type) {
+        var shader = gl.createShader(type);
+        gl.shaderSource(shader, src);
+        gl.compileShader(shader);
+        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+            alert("Error compiling shader: " + gl.getShaderInfoLog(shader));
+            return;
+        }
+        return shader;
+    }
+
+    var count = 0.0;
+    function drawTransformations(){
+      // Pintamos el canvas en cada iteracion
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      var position = Math.abs(Math.sin(count));
+      // Triangulo 1
+      var translated = mat4.fromTranslation(mat4.create(), [position, position, 0.0]);
+      var uniformMatrix4fv = gl.getUniformLocation(gl.program, "u_Matrix");
+      gl.uniformMatrix4fv(uniformMatrix4fv, false, translated);
+      // Dibujamos el rectangulo con las transformaciones correspondientes.
+      gl.drawElements(gl.TRIANGLES, 3, gl.UNSIGNED_SHORT, 0*2);
+
+      // Triangulo 2
+      var translated = mat4.fromTranslation(mat4.create(), [0.0, position, 0.0]);
+      var uniformMatrix4fv = gl.getUniformLocation(gl.program, "u_Matrix");
+      gl.uniformMatrix4fv(uniformMatrix4fv, false, translated);
+      // Dibujamos el rectangulo con las transformaciones correspondientes.
+      gl.drawElements(gl.TRIANGLES, 3, gl.UNSIGNED_SHORT, 3*2);
+
+      // Triangulo 3
+      var translated = mat4.fromTranslation(mat4.create(), [-position, position, 0.0]);
+      var uniformMatrix4fv = gl.getUniformLocation(gl.program, "u_Matrix");
+      gl.uniformMatrix4fv(uniformMatrix4fv, false, translated);
+      // Dibujamos el rectangulo con las transformaciones correspondientes.
+      gl.drawElements(gl.TRIANGLES, 3, gl.UNSIGNED_SHORT, 6*2);
+
+      // Triangulo 4
+      var translated = mat4.fromTranslation(mat4.create(), [-position, -position, 0.0]);
+      var uniformMatrix4fv = gl.getUniformLocation(gl.program, "u_Matrix");
+      gl.uniformMatrix4fv(uniformMatrix4fv, false, translated);
+      // Dibujamos el rectangulo con las transformaciones correspondientes.
+      gl.drawElements(gl.TRIANGLES, 3, gl.UNSIGNED_SHORT, 9*2);
+
+      // Triangulo 5
+      var translated = mat4.fromTranslation(mat4.create(), [0.0, -position, 0.0]);
+      var uniformMatrix4fv = gl.getUniformLocation(gl.program, "u_Matrix");
+      gl.uniformMatrix4fv(uniformMatrix4fv, false, translated);
+      // Dibujamos el rectangulo con las transformaciones correspondientes.
+      gl.drawElements(gl.TRIANGLES, 3, gl.UNSIGNED_SHORT, 12*2);
+
+      // Triangulo 6
+      var translated = mat4.fromTranslation(mat4.create(), [position, -position, 0.0]);
+      var uniformMatrix4fv = gl.getUniformLocation(gl.program, "u_Matrix");
+      gl.uniformMatrix4fv(uniformMatrix4fv, false, translated);
+      // Dibujamos el rectangulo con las transformaciones correspondientes.
+      gl.drawElements(gl.TRIANGLES, 3, gl.UNSIGNED_SHORT, 15*2);
+
+      // Incrementamos el contador
+      count += 0.01;
+      requestAnimationFrame(drawTransformations);
+    }
+
+
+</script>
+
+</html>
