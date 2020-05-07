@@ -1,7 +1,7 @@
 # 2019-2020-GyV3D
 Asignatura de Gráficos y Visualización 3D
 
-Ejercicio3 --> https://anapgh.github.io/2019-2020-GyV3D/Ejercicio3/
+Ejercicio3 --> https://anapgh.github.io/2019-2020-GyV3D/Ejercicio3/Ejercicio3.html
 
 Ejercicio4 --> https://anapgh.github.io/2019-2020-GyV3D/Ejercicio4/Ejercicio4.html
 
