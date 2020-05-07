@@ -176,9 +176,13 @@
       var position = Math.abs(Math.sin(count));
       // Triangulo 1
       var translated = mat4.fromTranslation(mat4.create(), [position, position, 0.0]);
+      // Set uniform value (u_Matrix) in vertex shader
       var uniformMatrix4fv = gl.getUniformLocation(gl.program, "u_Matrix");
+      // Le asigna el valor de translated a uniformMatrix4fv que hace ref a u_matrix
       gl.uniformMatrix4fv(uniformMatrix4fv, false, translated);
       // Dibujamos el rectangulo con las transformaciones correspondientes.
+      // Va avanzando de 3 en tres (en el array indices) y lo multiplica por los 2 bytes
+      // ya que son 16 bytes para 6 triangulos, 2 bytes para cada
       gl.drawElements(gl.TRIANGLES, 3, gl.UNSIGNED_SHORT, 0*2);
 
       // Triangulo 2
