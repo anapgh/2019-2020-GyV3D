@@ -10,26 +10,26 @@
 </body>
 
 <script id="shaderVs" type="x-shader/x-vertex">
-	attribute vec4 a_Position;
-  attribute float a_PointSize;
+	attribute vec4 a_Position; // Vector de 4, attribute que cambia para cada vertex
+  attribute float a_PointSize; // Tipo Float
     void main() {
-        gl_Position = a_Position;
-        gl_PointSize = a_PointSize;
+        gl_Position = a_Position; // Posicion del vertex
+        gl_PointSize = a_PointSize; // Tamaño del punto (pixel)
     }
 </script>
 
 <script id="shaderFs" type="x-shader/x-fragment">
-  precision mediump float;
-  uniform vec4 FragColor;
+  precision mediump float; // Precision del float
+  uniform vec4 FragColor; // Pasa datos que son los mismos para todos los vertex
     void main() {
-        gl_FragColor = FragColor;
+        gl_FragColor = FragColor; // Color del fragmento en RGBA
     }
 </script>
 
 <script>
-    var puntos = []
-    var a_size = []
-    var a_color = []
+    var puntos = [] // Array total de puntos
+    var a_size = [] // Array de tamaño
+    var a_color = [] // Array de colores
     function init() {
         // Get canvas object from the DOM
         var canvas = document.getElementById("myCanvas");
@@ -43,14 +43,14 @@
 
         // Clear canvas
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
-        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.clear(gl.COLOR_BUFFER_BIT); // Color al fondo
 
-        // Register event handler
+        // Register event handler, coge el evento del click del raton
         canvas.onmousedown = function(ev) {
-        click(ev, gl, canvas);
+          click(ev, gl, canvas);
         };
 
-        // Init shaders
+        // Init shaders, coge los valores del HTML
         var vs = document.getElementById('shaderVs').innerHTML;
         var fs = document.getElementById('shaderFs').innerHTML;
 
@@ -62,73 +62,78 @@
       }
 
     function click(ev, gl, canvas) {
-        // Coordinates of canvas origin
-        var rect = ev.target.getBoundingClientRect();
-        // relative x coordinate of click in canvas
-        var clickX = ev.clientX - rect.left;
-        // relative y coordinate of click in canvas
-        var clickY = ev.clientY - rect.top;
-        // WebGL coordinates (3D)
-        var halfCanvasWidth = canvas.width / 2;
-        var halfCanvasHeight = canvas.height / 2;
-        var x = (clickX - halfCanvasWidth) / halfCanvasWidth;
-        var y = (halfCanvasHeight - clickY) / halfCanvasHeight;
-        var xyz = [x, y, 0];
-        //Push sirve para ejecutar el metodo del array
-        puntos.push(xyz);
-        //Volvemos a pintar el canvas, ya que al poner los puntos nos lo quita
-        gl.clear(gl.COLOR_BUFFER_BIT);
-        //Cogemos con la funcion get atribute, las coordenadas del click
-        var a_Position = gl.getAttribLocation(gl.program, "a_Position");
-        if(a_Position < 0){
-          console.log('Failed to get the storage location of gl_Position');
-          return -1;
-        }
-        //Cogemos con la funcion get atribute, el tamaño del click
-        var a_PointSize = gl.getAttribLocation(gl.program, "a_PointSize");
+      // Transforma las coordenadas del click a coordenada WebGL
+      // Coordinates of canvas origin
+      var rect = ev.target.getBoundingClientRect();
+      // relative x coordinate of click in canvas
+      var clickX = ev.clientX - rect.left;
+      // relative y coordinate of click in canvas
+      var clickY = ev.clientY - rect.top;
+      // WebGL coordinates (3D)
+      var halfCanvasWidth = canvas.width / 2;
+      var halfCanvasHeight = canvas.height / 2;
+      var x = (clickX - halfCanvasWidth) / halfCanvasWidth;
+      var y = (halfCanvasHeight - clickY) / halfCanvasHeight;
+      var xyz = [x, y, 0];
+      // Push sirve para ejecutar el metodo del array
+      puntos.push(xyz);
+      // Volvemos a pintar el canvas, ya que al poner los puntos nos lo quita
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      // Cogemos con la funcion get atribute, las coordenadas del click
+      var a_Position = gl.getAttribLocation(gl.program, "a_Position");
+      // Comprobamos si hay errores de compilación
+      if(a_Position < 0){
+        console.log('Failed to get the storage location of gl_Position');
+        return -1;
+      }
+      // Cogemos con la funcion get atribute, el tamaño del click
+      var a_PointSize = gl.getAttribLocation(gl.program, "a_PointSize");
 
-        //Cogemos con la funcion get atribute, el color del click
-        var FragColor = gl.getUniformLocation(gl.program, "FragColor");
-        if (FragColor < 0){
-          console.log('Failed to get the storage location of FragColor');
-          return -1;
-        }
-        //Creamos los colores que quiero
-        var white = [0.0, 0.0, 0.0, 0.0];
-        var red = [1.0, 0.0, 0.0, 1.0];
-        var green = [0.0, 1.0, 0.0, 1.0];
-        var blue = [0.0, 0.0, 1.0, 1.0];
-        var pink = [1.0, 0.0, 0.5, 1.0]
-        //Comparamos las coordenadas para el tamaño y colors
-        if (((x >= 0.7) || (y >= 0.7)) || ((x <= -0.7) || (y <= -0.7))){
-            a_size.push(20.0);
-            a_color.push(white)
-        }else {
-            a_size.push(10.0);
-            if ((x > 0) && (y > 0)){
-              a_color.push(red);
-            }else if ((x > 0) && (y < 0)) {
-              a_color.push(green);
-            }else if ((x < 0) && (y > 0)) {
-              a_color.push(pink);
-            }else{
-              a_color.push(blue);
-            }
-        }
+      // Cogemos con la funcion get atribute, el color del click
+      var FragColor = gl.getUniformLocation(gl.program, "FragColor");
+      // Comprobamos si hay errores de compilación
+      if (FragColor < 0){
+        console.log('Failed to get the storage location of FragColor');
+        return -1;
+      }
+      // Creamos los colores que quiero
+      var white = [0.0, 0.0, 0.0, 0.0];
+      var red = [1.0, 0.0, 0.0, 1.0];
+      var green = [0.0, 1.0, 0.0, 1.0];
+      var blue = [0.0, 0.0, 1.0, 1.0];
+      var pink = [1.0, 0.0, 0.5, 1.0]
+      // Comparamos las coordenadas para el tamaño y colores
+      if (((x >= 0.7) || (y >= 0.7)) || ((x <= -0.7) || (y <= -0.7))){
+          a_size.push(20.0);
+          a_color.push(white)
+      }else {
+          a_size.push(10.0);
+          if ((x > 0) && (y > 0)){
+            a_color.push(red);
+          }else if ((x > 0) && (y < 0)) {
+            a_color.push(green);
+          }else if ((x < 0) && (y > 0)) {
+            a_color.push(pink);
+          }else{
+            a_color.push(blue);
+          }
+      }
 
-        //Hacemos un bucle for para recorrer el array que guarda las coordenadas
-        //de cada click, es decir su longitud 'length'
-        for(var i = 0; i < puntos.length; i++){
-          console.log(puntos[i]);
-      		gl.vertexAttrib3fv(a_Position, puntos[i]);
-          gl.vertexAttrib1f(a_PointSize, a_size[i]);
-          gl.uniform4fv(FragColor, a_color[i])
-          gl.drawArrays(gl.POINTS, 0, 1)
-        }
+      // Hacemos un bucle for para recorrer el array que guarda las coordenadas
+      // de cada click, es decir su longitud 'length'
+      for(var i = 0; i < puntos.length; i++){
+        console.log(puntos[i]);
+    		gl.vertexAttrib3fv(a_Position, puntos[i]); // Le añadimos a ese punto la posicion
+        gl.vertexAttrib1f(a_PointSize, a_size[i]); // El tamaño
+        gl.uniform4fv(FragColor, a_color[i]) // Y el color
+        gl.drawArrays(gl.POINTS, 0, 1) // Dibuja puntos
+      }
     }
 
     function initShaders(gl, vs_source, fs_source) {
         // Compile shaders
+        // los inicializa
+        // Crea el programa
         var vertexShader = makeShader(gl, vs_source, gl.VERTEX_SHADER);
         var fragmentShader = makeShader(gl, fs_source, gl.FRAGMENT_SHADER);
 
@@ -150,9 +155,13 @@
 
         return true;
     }
+
     function makeShader(gl, src, type) {
+        // Crea los shaders
         var shader = gl.createShader(type);
+        // Linka el shader a la variabel creada
         gl.shaderSource(shader, src);
+        // Compila el shader creado y linkado
         gl.compileShader(shader);
         if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
             alert("Error compiling shader: " + gl.getShaderInfoLog(shader));

@@ -14,10 +14,10 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.8.1/gl-matrix-min.js"></script>
 
 <script id="shaderVs" type="x-shader/x-vertex">
-    attribute vec4 a_Position;
-    uniform mat4 u_Matrix;
+    attribute vec4 a_Position; // Atributo de vector de 4 porque varia para cada vertex
+    uniform mat4 u_Matrix; // Uniform, matriz de transformacion de 4 dimensiones
     void main() {
-        gl_Position = u_Matrix * a_Position;
+        gl_Position = u_Matrix * a_Position; // Aqui se calcula el desplazamiento
     }
 </script>
 
@@ -31,10 +31,10 @@
 
 <script>
     var gl;
-    var rotation = 0.0;
-    var scale = 1.0;
-    var x = 0.0;
-    var y = 0.0;
+    var rotation = 0.0; // Rotacion
+    var scale = 1.0; // Escalado
+    var x = 0.0; // Eje x - Traslacion
+    var y = 0.0; // Eje Y - Traslacion
 
     function init() {
         // Get canvas object from the DOM
@@ -56,6 +56,7 @@
         }
 
         // Write the positions of vertices to a vertex shader
+        // se inicializan los datos de los vertices
         var n = initVertexBuffers(gl);
         if (n < 0) {
             console.log('Failed to set the positions of the vertices');
@@ -67,7 +68,7 @@
 
         // Draw
         drawScene();
-
+        // Evento del teclado en funcion del valor step por defecto
         document.onkeydown = function (ev) {
         var step = new Number(document.getElementById("step").value);
         switch (ev.keyCode) {
@@ -96,8 +97,9 @@
             rotation += step;
             break;
 
-        } // Draw
-          drawScene();
+        }
+         // Draw, se vuelve a pintar en cada movimiento
+         drawScene();
       }
 
     }
@@ -114,21 +116,27 @@
         var rgba = [1, 1, 0.0, 1.0];
 
         // Create a buffer object
+        // es la memoria interna de webGL
         var vertexBuffer = gl.createBuffer();
+        // Comprobamos errores de compilacion
         if (!vertexBuffer) {
             console.log('Failed to create the buffer object');
             return -1;
         }
+        // Conectamos los buffers a los shaders
         gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
 
         // Assign the vertices in buffer object to a_Position variable
+        // Coge el atributo a_position
         var a_Position = gl.getAttribLocation(gl.program, 'a_Position');
         if (a_Position < 0) {
             console.log('Failed to get the storage location of a_Position');
             return -1;
         }
+        // Especifica la disposicion del objeto vertex buffer en memoria
         gl.vertexAttribPointer(a_Position, dim, gl.FLOAT, false, 0, 0);
+        // Referenciar atributos con indices
         gl.enableVertexAttribArray(a_Position);
 
         // Assign the color to u_FragColor variable
@@ -137,6 +145,7 @@
             console.log('Failed to get the storage location of u_FragColor');
             return -1;
         }
+        // Le asigno rgba
         gl.uniform4fv(u_FragColor, rgba);
 
         // Return number of vertices
@@ -179,21 +188,28 @@
     }
 
     function drawScene() {
-        // Clear canvas
+        // Clear canvas, le volvemos a pintar en cada llamada
         gl.clear(gl.COLOR_BUFFER_BIT);
 
+        // Traslacion(out, vector)
         var translated = mat4.fromTranslation(mat4.create(), [x, y, 0.0]);
+        // Escalado (out, vector)
         var scaled = mat4.fromScaling(mat4.create(), [scale, scale, 0.0]);
+        // Rotacion (out, radio)
         var rotated = mat4.fromZRotation(mat4.create(), rotation);
+        // Multiplicacion de matrices para crear solo 1 con las 3
+        // Multplicacion(out, a, b)
         var matrix = mat4.multiply(mat4.create(), translated, scaled);
         var matrix_total = mat4.multiply(mat4.create(), matrix, rotated);
 
         // Set uniform value (u_Matrix) in vertex shader
         var mvMatrixUniform = gl.getUniformLocation(gl.program, "u_Matrix");
+        // Le asigna el valor de matrix_total a mvMatrixUniform que hace ref a u_matrix
         gl.uniformMatrix4fv(mvMatrixUniform, false, matrix_total);
 
         // Draw
-        gl.drawArrays(gl.TRIANGLES, 0, 6);
+        // Dibujamos los triangulos
+        gl.drawArrays(gl.TRIANGLES, 0, 6); // 2triangulos x 3vertices = 6vertices
 
         // Call drawScene again in the next browser repaint
         requestAnimationFrame(drawScene);
