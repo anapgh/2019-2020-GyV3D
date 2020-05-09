@@ -7,48 +7,53 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.8.1/gl-matrix-min.js"></script>
 
     <script id="shaderVs" type="x-shader/x-vertex">
-        attribute vec4 a_Position;
-        attribute vec2 a_TexCoord; // Luz direccional
-        attribute vec3 a_Normal;
+      attribute vec4 a_Position;
+      attribute vec3 a_Normal; // Luz direccional-->reflexion difusa (Normal)
+      attribute vec2 a_TexCoord; // Luz direccional (Posicion)
 
-        uniform mat4 u_pMatrix;
-        uniform mat4 u_vMatrix;
-        uniform mat4 u_mvMatrix;
+      uniform mat4 u_pMatrix; // Posicion
+      uniform mat4 u_vMatrix; // Movimiento
+      uniform mat4 u_mvMatrix; // Camara
+      uniform mat4 u_NormalMatrix; // Matriz magica (Inversa y transpuesta de u_mvMatrix)
 
-        varying vec2 v_TexCoord;
-        varying highp vec3 v_Normal; // Luz direccional
+      varying vec2 v_TexCoord;
+      varying vec4 v_NormalMatrix; // Matriz magica
 
-        void main() {
-            gl_Position = u_pMatrix * u_vMatrix * u_mvMatrix * a_Position;
-            v_TexCoord = a_TexCoord;
-            v_Normal = normalize(a_Normal); // Normalizo
-        }
+      void main() {
+          gl_Position = u_pMatrix * u_vMatrix * u_mvMatrix * a_Position; // Posicion
+          v_TexCoord = a_TexCoord; // Textura
+          v_NormalMatrix = normalize(u_NormalMatrix * vec4(a_Normal, 1.0));
+      }
+
     </script>
 
     <script id="shaderFs" type="x-shader/x-fragment">
-        precision highp float;
-        precision mediump float;
-        uniform sampler2D u_Sampler;
+      precision highp float;
+      precision mediump float;
 
-        varying vec2 v_TexCoord;
-        varying highp vec3 v_Normal; // Luz direccional
+      varying vec2 v_TexCoord;
+      varying vec4 v_NormalMatrix; // Matriz magica
 
-        uniform vec3 u_LightDirection; // Luz direccional
-        uniform vec3 u_LightColor;// Luz direccional
-        uniform vec3 u_AmbientLight; // Luz ambiental
+      uniform sampler2D u_Sampler; // Textura
+      uniform vec3 u_LightDirection; // Luz direccional (direccion)
+      uniform vec3 u_LightColor;// Luz direccional (color)
+      uniform vec3 u_AmbientLight; // Luz ambiental
 
+      void main(void) {
+        //--Textura
+        vec4 text = texture2D(u_Sampler, v_TexCoord);
+        //--Reflexion Luz ambiental (Solo influye el COLOR)
+        vec3 ambient = u_AmbientLight * text.rgb;
+        //--Reflexion Luz direccional (Influye DIRECCION y COLOR)
+        // Valor maximo entre 0 y el producto escalar
+        // La nueva normal es la multiplicacion de ambas matrices
+        float nDotL = max(dot(u_LightDirection,v_NormalMatrix.xyz),0.0); // Producto escalar
+        // Influye el color de la superficie y la direccion de la luz
+        vec3 diffuse = u_LightColor * text.rgb * nDotL; // Reflexion difusa
+        //--Reflexion total
+        gl_FragColor = vec4(diffuse + ambient, 1.0);
 
-        void main(void) {
-            //--Textura
-            vec4 text = texture2D(u_Sampler, v_TexCoord);
-            //--Reflexion Luz ambiental
-            vec3 ambient = u_AmbientLight * text.rgb;
-            //--Reflexion Luz direccional
-            float nDotL = max(dot(u_LightDirection, v_Normal),0.0); // Producto escalar
-            vec3 diffuse = u_LightColor * text.rgb * nDotL;
-            //--Reflexion total
-            gl_FragColor = vec4(diffuse + ambient, 1.0);
-        }
+      }
 
     </script>
 
@@ -74,13 +79,13 @@
             // Init shaders
             var vs = document.getElementById('shaderVs').innerHTML;
             var fs = document.getElementById('shaderFs').innerHTML;
-            initShaders(gl, vs, fs);
+            initShaders(vs, fs);
 
             // Init vertex shader
-            initVertexShader(gl);
+            initVertexShader();
 
             // Init projection matrix
-            initProjection(gl, canvas);
+            initProjection();
 
             // Set clear canvas color
             gl.clearColor(0.0, 0.0, 0.0, 1.0);
@@ -89,14 +94,16 @@
             gl.enable(gl.DEPTH_TEST);
 
             // Init textures
-            initTexturesAndDraw(gl);
+            initTexturesAndDraw();
 
         }
 
-        function initVertexShader(gl) {
+        function initVertexShader() {
             // Vertexes and textures coordinates
             var vertexesAndTextures = [];
             var normals = [];
+            // Conversion de coordenadasen funcion de 3 constantes
+            // RADIUS, LATITUDE_BANDS, LONGITUDE_BANDS
             for (var i = 0; i <= LATITUDE_BANDS; i++) {
                 var theta = i * Math.PI / LATITUDE_BANDS;
                 var sinTheta = Math.sin(theta);
@@ -111,10 +118,12 @@
                     var y = cosTheta;
                     var z = cosPhi * sinTheta;
 
+                    // Metemos en el array de vertices y texturas los vertices
                     vertexesAndTextures.push(RADIUS * x);
                     vertexesAndTextures.push(RADIUS * y);
                     vertexesAndTextures.push(RADIUS * z);
 
+                    // Coordenadas de textura
                     var u = 1 - (j / LONGITUDE_BANDS);
                     var v = 1 - (i / LATITUDE_BANDS);
 
@@ -122,6 +131,7 @@
                     normals.push(y);
                     normals.push(z);
 
+                    // Metemos en el array de vertices y texturas la textura
                     vertexesAndTextures.push(u);
                     vertexesAndTextures.push(v);
                 }
@@ -129,6 +139,7 @@
 
             // Indexes
             var indexes = [];
+            // Se calculan los indices de los vertices iterando de nuevo longitudes y latitudes
             for (var i = 0; i < LATITUDE_BANDS; i++) {
                 for (var j = 0; j < LONGITUDE_BANDS; j++) {
                     var first = i * (LONGITUDE_BANDS + 1) + j;
@@ -146,21 +157,30 @@
 
             // Write a_Position and a_TexCoord using gl.ARRAY_BUFFER
             gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+            // Escribimos las coordenadas de los vertices y colores
             gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexesAndTextures), gl.STATIC_DRAW);
 
             var vertexPositionAttribute = gl.getAttribLocation(gl.program, "a_Position");
             gl.enableVertexAttribArray(vertexPositionAttribute);
+            // El 3, es porque son 3 componentes, x,y, z
+            // 4*(3+2), me dice que voy a coger 5 componentes (3 vertice y 2 textura) que ocupan 4bytes (saltos).
+            // Sabemos que son 4bytes(además sabemos que son 32 porque es un FLOAT),
+            // debido a que tenemos un buffer de 32 bits, y 1byte son 8 bits.
+            // El offset es donde vas a empezar a leer tu.En el primero es 0, porque empieza en 0(POSICION)
             gl.vertexAttribPointer(vertexPositionAttribute, 3, gl.FLOAT, false, 4 * (3 + 2), 0);
 
             var vertexColorAttribute = gl.getAttribLocation(gl.program, "a_TexCoord");
             gl.enableVertexAttribArray(vertexColorAttribute);
+            // El offset empieza en la posición 3 con memoria 4 (COLOR)
             gl.vertexAttribPointer(vertexColorAttribute, 2, gl.FLOAT, false, 4 * (3 + 2), 4 * 3);
 
             // Write indexes in gl.ELEMENT_ARRAY_BUFFER
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.createBuffer());
+            // Escribimos las coordenadas de los indices
             gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indexes), gl.STATIC_DRAW);
 
             gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+            // Escribimos las coordenadas de la normal
             gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(normals), gl.STATIC_DRAW);
 
             var vertexNormalAttribute = gl.getAttribLocation(gl.program, "a_Normal");
@@ -168,22 +188,24 @@
             gl.vertexAttribPointer(vertexNormalAttribute, 3, gl.FLOAT, false, 0, 0);
         }
 
-        function initProjection(gl, canvas) {
+        function initProjection() {
             // Write u_pMatrix
             var pMatrixUniform = gl.getUniformLocation(gl.program, "u_pMatrix");
             var ratio = canvas.width / canvas.height;
+            // Matriz de posicion
             var pMatrix = mat4.perspective(mat4.create(), 0.9, ratio, 0.1, 100);
             gl.uniformMatrix4fv(pMatrixUniform, false, pMatrix);
 
             // Write u_vMatrix
             var vMatrixUniform = gl.getUniformLocation(gl.program, "u_vMatrix");
+            // Matriz de la camara
             var vMatrix = mat4.lookAt(mat4.create(), [0, 0, 3], [0, 0, 0], [0, 1, 0]);
             gl.uniformMatrix4fv(vMatrixUniform, false, vMatrix);
 
             // Write u_AmbientLight
-            var ambientLight = [0.1, 0.1, 0.1];
+            var ambientLight = [0.1, 0.1, 0.1]; // RGB
             var ambientLightUniform = gl.getUniformLocation(gl.program, "u_AmbientLight");
-            gl.uniform3fv(ambientLightUniform, ambientLight);
+            gl.uniform3fv(ambientLightUniform, ambientLight); // Asigno el valor
 
             // Write u_LightColor
             var lightColor = [ 1.0, 1.0, 1.0 ]; // white
@@ -191,25 +213,29 @@
             gl.uniform3fv(lightColorUniform, lightColor);
 
             // Write u_LightDirection
+            // La direccion de la luz se obtiene desde la interfaz del usuario
+            // Y se escribe en la variable vertex shader, u_LightDirection
+            // Nos indican hacia donde es reflejada no de donde proviene
             var x = document.getElementById("x").value;
             var y = document.getElementById("y").value;
             var z = document.getElementById("z").value;
             var lightDirection = [ x, y, z ];
+            // normalize(out, a)
             vec3.normalize(lightDirection, lightDirection);
             var lightDirectionUniform = gl.getUniformLocation(gl.program, "u_LightDirection");
             gl.uniform3fv(lightDirectionUniform, lightDirection);
         }
 
-        function initTexturesAndDraw(gl) {
+        function initTexturesAndDraw() {
             var image = new Image();
             image.src = 'deathstar.png';
             image.onload = function () {
-                loadTexture(gl, "u_Sampler", image, 0, true);
+                loadTexture("u_Sampler", image, 0, true);
                 drawScene();
             };
         }
 
-        function loadTexture(gl, samplerUniform, image, unitNumber, flip) {
+        function loadTexture(samplerUniform, image, unitNumber, flip) {
             // Flip the image's y axis
             gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flip);
 
@@ -233,19 +259,33 @@
             var uMvMatrix = gl.getUniformLocation(gl.program, "u_mvMatrix");
             gl.uniformMatrix4fv(uMvMatrix, false, mvMatrix);
 
+            // Get the normal direction using the model Matrix
+            // Creamos la matriz magica a partir de mvMatrix
+            // Primero invertimos mvMatrix
+            var normalMatrixInvert = mat4.invert(mat4.create(), mvMatrix);
+            // Transponemos la inversa
+            var normalMatrixInvertTranspose = mat4.transpose(mat4.create(), normalMatrixInvert);
+            // Obtenemos la variable del shader
+            var normalUniformMatrix = gl.getUniformLocation(gl.program, "u_NormalMatrix");
+            // Le asignamos el valor
+            gl.uniformMatrix4fv(normalUniformMatrix, false, normalMatrixInvertTranspose);
+
             // Draw
+            // Numero de cuadrados que hay, formados por 3 triangulos y 3 vertices cada uno
             gl.drawElements(gl.TRIANGLES, LATITUDE_BANDS * LONGITUDE_BANDS * 3 * 2, gl.UNSIGNED_SHORT, 0);
 
             // Call drawScene again in the next browser repaint
             count += 0.01;
-            initProjection(gl,canvas);
-            requestAnimationFrame(drawScene);
+            initProjection();
+            requestAnimationFrame(function() {
+              drawScene();
+            });
         }
 
-        function initShaders(gl, vs_source, fs_source) {
+        function initShaders(vs_source, fs_source) {
             // Compile shaders
-            var vertexShader = makeShader(gl, vs_source, gl.VERTEX_SHADER);
-            var fragmentShader = makeShader(gl, fs_source, gl.FRAGMENT_SHADER);
+            var vertexShader = makeShader(vs_source, gl.VERTEX_SHADER);
+            var fragmentShader = makeShader(fs_source, gl.FRAGMENT_SHADER);
 
             // Create program
             var glProgram = gl.createProgram();
@@ -260,7 +300,7 @@
             gl.program = glProgram;
         }
 
-        function makeShader(gl, src, type) {
+        function makeShader(src, type) {
             var shader = gl.createShader(type);
             gl.shaderSource(shader, src);
             gl.compileShader(shader);
@@ -270,6 +310,7 @@
             }
             return shader;
         }
+
     </script>
 
 </head>
@@ -278,9 +319,9 @@
     <canvas id="myCanvas" width="640" height="480"></canvas>
     <br>
     <b>Light direction</b><br>
-    <input type="range" id="x" min="-20" max="20" value="2" step="1">X<br>
-    <input type="range" id="y" min="-20" max="20" value="8" step="1">Y<br>
-    <input type="range" id="z" min="-20" max="20" value="8" step="1">Z<br>
+    <input type="range" id="x" min="-20" max="20" value="-15" step="1">X<br>
+    <input type="range" id="y" min="-20" max="20" value="5" step="1">Y<br>
+    <input type="range" id="z" min="-20" max="20" value="10" step="1">Z<br>
 </body>
 
 </html>
