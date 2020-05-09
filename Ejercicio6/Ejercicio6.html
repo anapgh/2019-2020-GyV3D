@@ -57,15 +57,17 @@
                          1.0, 0.0,
                          1.0, 1.0];
 
+        var tex_up = [0.0, 0.0,
+                      1.0, 0.0,
+                      1.0, 1.0,
+                      0.0, 1.0];
+
         var tex_down = [1.0, 1.0,
                         0.0, 1.0,
                         0.0, 0.0,
                         1.0, 0.0];
 
-        var tex_up = [0.0, 0.0,
-                      1.0, 0.0,
-                      1.0, 1.0,
-                      0.0, 1.0];
+
 
         var text = tex_left; // Se iniciliza la textura con la flecha a la derecha
 
@@ -144,36 +146,42 @@
         function initVertexShader(gl) {
             // Coordenadas de Vertices (x,y,z) y Texturas(s,t)
             var vertexesAndTextures = [
-                // FRONT
-               -0.5, -0.5, -0.5,    text[0], text[1], // bottom-left
-                0.5, -0.5, -0.5,    text[2], text[3], // bottom-right
-                0.5,  0.5, -0.5,    text[4], text[5], // top-right
-               -0.5,  0.5, -0.5,    text[6], text[7], // top-left
-                // BACK
-               -0.5, -0.5,  0.5,    text[4], text[5],
-                0.5, -0.5,  0.5,    text[6], text[7],
-                0.5,  0.5,  0.5,    text[0], text[1],
-               -0.5,  0.5,  0.5,    text[2], text[3],
-                // LEFT
-               -0.5, -0.5, -0.5,    text[2], text[3],
-               -0.5,  0.5, -0.5,    text[4], text[5],
-               -0.5,  0.5,  0.5,    text[6], text[7],
-               -0.5, -0.5,  0.5,    text[0], text[1],
-                // RIGHT
-                0.5, -0.5, -0.5,    text[6], text[7],
-                0.5,  0.5, -0.5,    text[0], text[1],
-                0.5,  0.5,  0.5,    text[2], text[3],
-                0.5, -0.5,  0.5,    text[4], text[5],
-                // BOTTOM
-               -0.5, -0.5, -0.5,    text[6], text[7],
-               -0.5, -0.5,  0.5,    text[0], text[1],
-                0.5, -0.5,  0.5,    text[2], text[3],
-                0.5, -0.5, -0.5,    text[4], text[5],
-                // TOP
-               -0.5,  0.5, -0.5,    text[2], text[3],
-               -0.5,  0.5,  0.5,    text[4], text[5],
-                0.5,  0.5,  0.5,    text[6], text[7],
-                0.5,  0.5, -0.5,    text[0], text[1],
+              // FRONT
+             -0.5, -0.5, -0.5,    text[0], text[1], // bottom-left
+              0.5, -0.5, -0.5,    text[2], text[3], // bottom-right
+              0.5,  0.5, -0.5,    text[4], text[5], // top-right
+             -0.5,  0.5, -0.5,    text[6], text[7], // top-left
+
+              // BACK
+             -0.5, -0.5,  0.5,    text[4], text[5], // bottom-left
+              0.5, -0.5,  0.5,    text[6], text[7], // bottom-right
+              0.5,  0.5,  0.5,    text[0], text[1], // top-right
+             -0.5,  0.5,  0.5,    text[2], text[3], // top-left
+
+              // LEFT
+             -0.5, -0.5, -0.5,    text[2], text[3], // bottom-left
+             -0.5,  0.5, -0.5,    text[4], text[5], // bottom-right
+             -0.5,  0.5,  0.5,    text[6], text[7], // top-right
+             -0.5, -0.5,  0.5,    text[0], text[1], // top-left
+
+              // RIGHT
+              0.5, -0.5, -0.5,    text[6], text[7], // bottom-left
+              0.5,  0.5, -0.5,    text[0], text[1], // bottom-right
+              0.5,  0.5,  0.5,    text[2], text[3], // top-right
+              0.5, -0.5,  0.5,    text[4], text[5], // top-left
+
+              // TOP
+             -0.5,  0.5, -0.5,    text[2], text[3], // bottom-left
+             -0.5,  0.5,  0.5,    text[4], text[5], // bottom-right
+              0.5,  0.5,  0.5,    text[6], text[7], // top-right
+              0.5,  0.5, -0.5,    text[0], text[1], // top-left
+
+              // BOTTOM
+             -0.5, -0.5, -0.5,    text[6], text[7], // bottom-left
+             -0.5, -0.5,  0.5,    text[0], text[1], // bottom-right
+              0.5, -0.5,  0.5,    text[2], text[3], // top-right
+              0.5, -0.5, -0.5,    text[4], text[5], // top-left
+
             ];
 
             // Indexes, Indices para crear los triangulos
