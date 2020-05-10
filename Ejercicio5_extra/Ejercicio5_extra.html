@@ -95,11 +95,12 @@
             // Draw
             // Primitiva
             if (primitiveValue == 'triangles'){
-              //Dibujamos 6 caras por 2 triangulos cada uno, por 3 vertices cada uno.
-              gl.drawElements(gl.TRIANGLES, 6 * 2 * 3, gl.UNSIGNED_SHORT, 0);
+              //Dibujamos 2 caras por 6 triangulos cada uno, por 3 vertices cada uno.
+              //Dibujamos 3 caras por 2 triangulos cada uno por 3 vertices cada uno
+              gl.drawElements(gl.TRIANGLES,(2 * 6 * 3)+ (3 * 2 * 3) ,gl.UNSIGNED_SHORT, 0);
             }else{
               //En este caso igual, pero solo lineas.
-              gl.drawElements(gl.LINES, 6 * 2 * 3, gl.UNSIGNED_SHORT, 0);
+              gl.drawElements(gl.LINES, (2 * 6 * 3)+ (3 * 2 * 3), gl.UNSIGNED_SHORT, 0);
             }
 
             // Init projection matrix
@@ -112,57 +113,50 @@
             // Vertexes and colors  (X, Y, Z, R, G, B)
             // Aqui esta juntando vertices y colores, luego en el buffer diremos donde empiezas
             var vertexesAndColors = [
-                // 4 vertices por cara con su respectivo color
-                -0.5, -0.5, -0.5,   1, 1, 0,
-                 0.5, -0.5, -0.5,   1, 1, 0,
-                 0.5,  0.5, -0.5,   1, 1, 0,
-                -0.5,  0.5, -0.5,   1, 1, 0,
-
-                -0.5, -0.5,  0.5,   0, 0, 1,
-                 0.5, -0.5,  0.5,   0, 0, 1,
-                 0.5,  0.5,  0.5,   0, 0, 1,
-                -0.5,  0.5,  0.5,   0, 0, 1,
-
-                -0.5, -0.5, -0.5,   0, 1, 1,
-                -0.5,  0.5, -0.5,   0, 1, 1,
-                -0.5,  0.5,  0.5,   0, 1, 1,
-                -0.5, -0.5,  0.5,   0, 1, 1,
-
-                 0.5, -0.5, -0.5,   1, 0, 0,
-                 0.5,  0.5, -0.5,   1, 0, 0,
-                 0.5,  0.5,  0.5,   1, 0, 0,
-                 0.5, -0.5,  0.5,   1, 0, 0,
-
-                -0.5, -0.5, -0.5,   1, 0, 1,
-                -0.5, -0.5,  0.5,   1, 0, 1,
-                 0.5, -0.5,  0.5,   1, 0, 1,
-                 0.5, -0.5, -0.5,   1, 0, 1,
-
-                -0.5,  0.5, -0.5,   0, 1, 0,
-                -0.5,  0.5,  0.5,   0, 1, 0,
-                 0.5,  0.5,  0.5,   0, 1, 0,
-                 0.5,  0.5, -0.5,   0, 1, 0
+              // HEXAGONO TOP
+              0.0,  0.0,  1.0,   1.0, 0.0, 0.0, // Vertice 0 - Centro hexagono
+             -0.25, 0.5,  1.0,   0.0, 1.0, 1.0, // Vertice 1 - CIAN
+              0.25, 0.5,  1.0,   0.0, 1.0, 1.0, // Vertice 2
+              0.5,  0.0,  1.0,   1.0, 1.0, 0.0, // Vertice 3 - AMARILLO
+              0.25,-0.5,  1.0,   1.0, 1.0, 0.0, // Vertice 4
+             -0.25,-0.5,  1.0,   1.0, 0.0, 1.0, // Vertice 5 - MAGENTA
+             -0.5,  0.0,  1.0,   1.0, 0.0, 1.0, // Vertice 6
+             // HEXAGONO BOTTOM
+              0.0,  0.0, -1.0,   1.0, 0.0, 0.0, // Vertice 7 - Centro hexagono
+             -0.25, 0.5, -1.0,   0.0, 1.0, 1.0, // Vertice 8 - CIAN
+              0.25, 0.5, -1.0,   0.0, 1.0, 1.0, // Vertice 9
+              0.5,  0.0, -1.0,   1.0, 1.0, 0.0, // Vertice 10 - AMARILLO
+              0.25,-0.5, -1.0,   1.0, 1.0, 0.0, // Vertice 11
+             -0.25,-0.5, -1.0,   1.0, 0.0, 1.0, // Vertice 12 - MAGENTA
+             -0.5,  0.0, -1.0,   1.0, 0.0, 1.0, // Vertice 13
             ];
 
             // Indexes (for drawing squares using triangles)
             var indexes = [
-                0, 1, 2,
-                0, 2, 3,
+               // HEXAGONO TOP
+               0, 1, 2,
+               0, 2 ,3,
+               0, 3, 4,
+               0, 4, 5,
+               0, 5, 6,
+               0, 6, 1,
 
-                4, 5, 6,
-                4, 6, 7,
+               // HEXAGONO BOTTOM
+               7, 8, 9,
+               7, 9 ,10,
+               7, 10,11,
+               7, 11,12,
+               7, 12,13,
+               7, 13, 8,
 
-                8, 9, 10,
-                8, 10, 11,
-
-                12, 13, 14,
-                12, 14, 15,
-
-                16, 17, 18,
-                16, 18, 19,
-
-                20, 21, 22,
-                20, 22, 23
+               // UNION ENTRE AMBOS
+               // RECTANGULOS
+               1, 8, 9, // cian
+               1, 9, 2, // cian
+               3, 10, 11, // amarillo
+               3, 4, 11, // amarillo
+               5, 12, 13, // magenta
+               5, 13, 6, // magenta
             ];
 
             // Write a_Position and a_Color using gl.ARRAY_BUFFER
