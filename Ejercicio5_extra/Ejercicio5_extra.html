@@ -31,6 +31,8 @@
         var count = 0.0;
         var canvas;
         var z = -3; // Eje z, se usara para la posicion de la camara
+        var ejex = 90;
+        var ejey = 45;
 
         function init() {
             // Get canvas object from the DOM
@@ -83,10 +85,13 @@
               count += 0.01;
               // Creamos la matriz de movimiento, en este caso si esta rotando
               // (out, count, posicion)
-              var mvMatrix = mat4.fromRotation(mat4.create(), count, [0.5, 0.5, 0.5]);
+              radianesx = (ejex * Math.PI) / 180.0;
+              radianesy = (ejey * Math.PI) / 180.0;
+
+              var mvMatrix = mat4.fromRotation(mat4.create(), count, [radianesx, radianesy, 0.5]);
             }else{
               // Creamos la matriz de movimiento, en este caso no esta rotando
-              var mvMatrix = mat4.fromRotation(mat4.create(), count, [0.5, 0.5, 0.5]);
+              var mvMatrix = mat4.fromRotation(mat4.create(), count, [radianesx, radianesy, 0.5]);
             }
             // Creamos variable de matriz de movimiento
             var uMvMatrix = gl.getUniformLocation(gl.program, "u_mvMatrix");
@@ -97,10 +102,10 @@
             if (primitiveValue == 'triangles'){
               //Dibujamos 2 caras por 6 triangulos cada uno, por 3 vertices cada uno.
               //Dibujamos 3 caras por 2 triangulos cada uno por 3 vertices cada uno
-              gl.drawElements(gl.TRIANGLES,(2 * 6 * 3)+ (3 * 2 * 3) ,gl.UNSIGNED_SHORT, 0);
+              gl.drawElements(gl.TRIANGLES,(2 * 6 * 3) + (3 * 2 * 3) ,gl.UNSIGNED_SHORT, 0);
             }else{
               //En este caso igual, pero solo lineas.
-              gl.drawElements(gl.LINES, (2 * 6 * 3)+ (3 * 2 * 3), gl.UNSIGNED_SHORT, 0);
+              gl.drawElements(gl.LINES, (2 * 6 * 3) + (3 * 2 * 3), gl.UNSIGNED_SHORT, 0);
             }
 
             // Init projection matrix
@@ -114,21 +119,21 @@
             // Aqui esta juntando vertices y colores, luego en el buffer diremos donde empiezas
             var vertexesAndColors = [
               // HEXAGONO TOP
-              0.0,  0.0,  1.0,   1.0, 0.0, 0.0, // Vertice 0 - Centro hexagono
-             -0.25, 0.5,  1.0,   0.0, 1.0, 1.0, // Vertice 1 - CIAN
-              0.25, 0.5,  1.0,   0.0, 1.0, 1.0, // Vertice 2
-              0.5,  0.0,  1.0,   1.0, 1.0, 0.0, // Vertice 3 - AMARILLO
-              0.25,-0.5,  1.0,   1.0, 1.0, 0.0, // Vertice 4
-             -0.25,-0.5,  1.0,   1.0, 0.0, 1.0, // Vertice 5 - MAGENTA
-             -0.5,  0.0,  1.0,   1.0, 0.0, 1.0, // Vertice 6
+              0.0,  0.0,  0.5,   1.0, 0.0, 0.0, // Vertice 0 - Centro hexagono
+             -0.25, 0.5,  0.5,   0.0, 1.0, 1.0, // Vertice 1 - CIAN
+              0.25, 0.5,  0.5,   0.0, 1.0, 1.0, // Vertice 2
+              0.5,  0.0,  0.5,   1.0, 1.0, 0.0, // Vertice 3 - AMARILLO
+              0.25,-0.5,  0.5,   1.0, 1.0, 0.0, // Vertice 4
+             -0.25,-0.5,  0.5,   1.0, 0.0, 1.0, // Vertice 5 - MAGENTA
+             -0.5,  0.0,  0.5,   1.0, 0.0, 1.0, // Vertice 6
              // HEXAGONO BOTTOM
-              0.0,  0.0, -1.0,   1.0, 0.0, 0.0, // Vertice 7 - Centro hexagono
-             -0.25, 0.5, -1.0,   0.0, 1.0, 1.0, // Vertice 8 - CIAN
-              0.25, 0.5, -1.0,   0.0, 1.0, 1.0, // Vertice 9
-              0.5,  0.0, -1.0,   1.0, 1.0, 0.0, // Vertice 10 - AMARILLO
-              0.25,-0.5, -1.0,   1.0, 1.0, 0.0, // Vertice 11
-             -0.25,-0.5, -1.0,   1.0, 0.0, 1.0, // Vertice 12 - MAGENTA
-             -0.5,  0.0, -1.0,   1.0, 0.0, 1.0, // Vertice 13
+              0.0,  0.0, -0.5,   1.0, 0.0, 0.0, // Vertice 7 - Centro hexagono
+             -0.25, 0.5, -0.5,   0.0, 1.0, 1.0, // Vertice 8 - CIAN
+              0.25, 0.5, -0.5,   0.0, 1.0, 1.0, // Vertice 9
+              0.5,  0.0, -0.5,   1.0, 1.0, 0.0, // Vertice 10 - AMARILLO
+              0.25,-0.5, -0.5,   1.0, 1.0, 0.0, // Vertice 11
+             -0.25,-0.5, -0.5,   1.0, 0.0, 1.0, // Vertice 12 - MAGENTA
+             -0.5,  0.0, -0.5,   1.0, 0.0, 1.0, // Vertice 13
             ];
 
             // Indexes (for drawing squares using triangles)
@@ -151,12 +156,12 @@
 
                // UNION ENTRE AMBOS
                // RECTANGULOS
-               1, 8, 9, // cian
-               1, 9, 2, // cian
-               3, 10, 11, // amarillo
-               3, 4, 11, // amarillo
-               5, 12, 13, // magenta
-               5, 13, 6, // magenta
+               2, 1, 8,   //cian (para el rectangulo)
+               2, 8, 9,   //cian
+               4, 3, 10,  //amarillo
+               4, 10, 11, //amarillo
+               6, 5, 12,  //magenta
+               6, 12, 13, //magenta
             ];
 
             // Write a_Position and a_Color using gl.ARRAY_BUFFER
@@ -249,8 +254,8 @@
     <b>Rotation</b>
     <input type="checkbox" name="rotation" checked><br>
     <b>WebGL primitive</b>
-    <input type="radio" name="primitive" value="triangles" checked> Triangles
-    <input type="radio" name="primitive" value="lines"> Lines<br>
+    <input type="radio" name="primitive" value="triangles" > Triangles
+    <input type="radio" name="primitive" value="lines" checked> Lines<br>
     <b>Projection type</b>
     <input type="radio" name="projection" value="perspective" checked> Perspective
     <input type="radio" name="projection" value="orthographic" > Orthographic<br>
