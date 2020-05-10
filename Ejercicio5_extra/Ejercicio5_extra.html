@@ -80,18 +80,22 @@
             var rotationChecked = document.querySelector('input[name="rotation"]:checked');
             var primitiveValue = document.querySelector('input[name="primitive"]:checked').value;
 
+            // Calculamos los nuevos ejes de x e y
+            radianesx = (ejex * Math.PI) / 180.0;
+            radianesy = (ejey * Math.PI) / 180.0;
+            var rotatedX = mat4.fromXRotation(mat4.create(), radianesx);
+            var rotatedY = mat4.rotateY(mat4.create(),rotatedX, radianesx+radianesy);
+
             // Hacemos la rotación
             if(rotationChecked){
-              count += 0.01;
-              // Creamos la matriz de movimiento, en este caso si esta rotando
+              count -= 0.01;
+              // Creamos la matriz de movimiento, en este caso si esta rotando, y en eje Z
               // (out, count, posicion)
-              radianesx = (ejex * Math.PI) / 180.0;
-              radianesy = (ejey * Math.PI) / 180.0;
+              var mvMatrix = mat4.rotateZ(mat4.create(), rotatedY, count);
 
-              var mvMatrix = mat4.fromRotation(mat4.create(), count, [radianesx, radianesy, 0.5]);
             }else{
               // Creamos la matriz de movimiento, en este caso no esta rotando
-              var mvMatrix = mat4.fromRotation(mat4.create(), count, [radianesx, radianesy, 0.5]);
+              var mvMatrix = mat4.rotateZ(mat4.create(), rotatedY, count);
             }
             // Creamos variable de matriz de movimiento
             var uMvMatrix = gl.getUniformLocation(gl.program, "u_mvMatrix");
@@ -254,8 +258,8 @@
     <b>Rotation</b>
     <input type="checkbox" name="rotation" checked><br>
     <b>WebGL primitive</b>
-    <input type="radio" name="primitive" value="triangles" > Triangles
-    <input type="radio" name="primitive" value="lines" checked> Lines<br>
+    <input type="radio" name="primitive" value="triangles" checked> Triangles
+    <input type="radio" name="primitive" value="lines"> Lines<br>
     <b>Projection type</b>
     <input type="radio" name="projection" value="perspective" checked> Perspective
     <input type="radio" name="projection" value="orthographic" > Orthographic<br>
