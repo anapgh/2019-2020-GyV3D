@@ -8,26 +8,31 @@
 
 <script>
    function init() {
+     // Creamos la escena
       var scene = new THREE.Scene();
       var sceneWidth = window.innerWidth;
       var sceneHeight = window.innerHeight;
 
+      // la camara
       var camera = new THREE.PerspectiveCamera(90, sceneWidth / sceneHeight, 0.01, 100);
       camera.position.z = 5; // Como de cerca esta la camara
-      
 
+      // Creamos el objeto, su geometria y su textura
       var geometry = new THREE.SphereGeometry(2, 20, 20);
       var texture = new THREE.TextureLoader().load("earth.png")
       var material = new THREE.MeshBasicMaterial({
         map : texture
       });
       var sphere = new THREE.Mesh(geometry, material);
+      // Añadimos nuestro objeto a la escena
       scene.add(sphere);
 
+      // Creamos el renderizador
       var renderer = new THREE.WebGLRenderer({
          antialias : true
       });
 
+      // Renderizamos el tamaño de la escena
       renderer.setSize(sceneWidth, sceneHeight);
       document.body.appendChild(renderer.domElement);
 
@@ -35,10 +40,13 @@
    }
 
    function animate(sphere, renderer, scene, camera) {
+      // Movemos el objeto sobre su eje y
       sphere.rotation.y += 0.01;
 
+      // Renderizamos
       renderer.render(scene, camera);
 
+      // Realizamos la animacion con los elementos de la escena
       requestAnimationFrame(function() {
          animate(sphere, renderer, scene, camera);
       });
